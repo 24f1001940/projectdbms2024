@@ -11,168 +11,211 @@
   <link rel="stylesheet" href="mainpages.css">
 
   <style>
-    body { background: #f8f9fa; color: #333; }
-    .dashboard-header { background: #dc3545; color: white; padding: 20px 0; margin-bottom: 30px; }
-    .owner-card { border: none; border-radius: 12px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; }
-    .section-title { font-weight: 700; color: #1e1e2f; border-left: 4px solid #dc3545; padding-left: 15px; margin-bottom: 20px; }
-    .order-item { border-left: 3px solid #ffc107; background: #fffdf5; transition: 0.2s; }
-    .order-item:hover { background: #fff9e6; }
+    .order-card { border-left: 5px solid var(--primary); margin-bottom: 1rem; }
+    .status-badge { border-radius: 20px; padding: 5px 15px; font-size: 0.8rem; font-weight: 600; }
+    .status-pending { background: #ffc107; color: #000; }
+    .status-preparing { background: #17a2b8; color: #fff; }
+    .status-ready { background: #28a745; color: #fff; }
+    .menu-item-row:hover { background: rgba(255,255,255,0.05); }
   </style>
 </head>
 
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-  <div class="container">
-    <a class="navbar-brand d-flex align-items-center" href="#">
-      <i class="fas fa-utensils mr-2 text-warning"></i> 
-      <span class="font-weight-bold">CANTEEN OWNER PANEL</span>
-    </a>
-    <button class="btn btn-outline-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt mr-1"></i> Logout</button>
-  </div>
-</nav>
-
-<div class="dashboard-header text-center">
-  <div class="container">
-    <h2 class="mb-0 font-weight-bold">Manage Your Canteen</h2>
-    <p class="text-white-50 small mb-0">Track orders and update your menu in real-time</p>
-  </div>
+<div class="sidebar shadow-lg">
+    <div class="text-center mb-5">
+        <h4 class="font-weight-bold text-gradient">OWNER PANEL</h4>
+    </div>
+    <ul class="list-group list-group-flush bg-transparent">
+        <a href="#" class="list-group-item bg-transparent text-white border-0 active" onclick="showSection('orders')"><i class="fas fa-clipboard-list mr-3"></i>Live Orders</a>
+        <a href="#" class="list-group-item bg-transparent text-white border-0" onclick="showSection('menu')"><i class="fas fa-utensils mr-3"></i>Menu Management</a>
+        <a href="#" class="list-group-item bg-transparent text-white border-0" onclick="showSection('analytics')"><i class="fas fa-chart-pie mr-3"></i>Analytics</a>
+        <hr class="bg-secondary w-100">
+        <a href="#" class="list-group-item bg-transparent text-warning border-0" onclick="App.logout()"><i class="fas fa-sign-out-alt mr-3"></i>Logout</a>
+    </ul>
 </div>
 
-<div class="container mb-5">
-  <div class="row">
-
-    <!-- MENU MANAGEMENT -->
-    <div class="col-lg-5">
-      <div class="card owner-card">
-        <div class="card-body">
-          <h5 class="section-title">Add New Menu Item</h5>
-          <form onsubmit="event.preventDefault(); addItem();">
-            <div class="form-group">
-              <label class="small font-weight-bold">Item Name</label>
-              <input id="itemName" class="form-control" placeholder="e.g. Special Chicken Biryani" required>
+<div class="main-content">
+    <nav class="navbar navbar-expand-lg mb-4 glass-card">
+        <div class="container-fluid">
+            <span class="navbar-text">Canteen: <strong id="canteenNameDisplay">...</strong></span>
+            <div class="ml-auto">
+                <button class="btn btn-sm btn-outline-light mr-2" onclick="App.toggleTheme()"><i class="fas fa-moon"></i></button>
+                <div class="badge badge-success p-2"><i class="fas fa-circle mr-2"></i>Live System Active</div>
             </div>
-            <div class="form-group">
-              <label class="small font-weight-bold">Price (₹)</label>
-              <input id="itemPrice" class="form-control" placeholder="0.00" type="number" step="0.01" required>
-            </div>
-            <button class="btn btn-danger btn-block font-weight-bold py-2" type="submit">
-              <i class="fas fa-plus-circle mr-2"></i>ADD TO MENU
-            </button>
-          </form>
-          
-          <hr class="my-4">
-          <h6 class="font-weight-bold mb-3">Your Menu Highlights</h6>
-          <div id="menuItemsList" class="small text-muted">
-            <!-- Briefly show some items -->
-          </div>
         </div>
-      </div>
+    </nav>
+
+    <!-- LIVE ORDERS SECTION -->
+    <div id="section-orders" class="owner-section animate-fade-in">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="font-weight-bold">Incoming Orders</h4>
+            <button class="btn btn-outline-primary btn-sm" onclick="loadOrders()"><i class="fas fa-sync mr-2"></i>Refresh</button>
+        </div>
+        <div id="ordersContainer">
+            <!-- Orders injected here -->
+        </div>
     </div>
 
-    <!-- ORDERS MANAGEMENT -->
-    <div class="col-lg-7">
-      <div class="card owner-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="section-title mb-0">Recent Orders</h5>
-            <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="loadOrders()">
-              <i class="fas fa-sync-alt mr-1"></i> Refresh
-            </button>
-          </div>
-          <div id="ordersList">
-            <div class="text-center py-5 text-muted">
-              <i class="fas fa-clipboard-list fa-3x mb-3"></i>
-              <p>No active orders at the moment</p>
+    <!-- MENU MANAGEMENT SECTION -->
+    <div id="section-menu" class="owner-section animate-fade-in d-none">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="glass-card p-4 mb-4">
+                    <h5 class="font-weight-bold mb-4">Add Menu Item</h5>
+                    <form onsubmit="event.preventDefault(); handleAddItem();">
+                        <div class="form-group">
+                            <label class="small">Item Name</label>
+                            <input id="newItemName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small">Price (₹)</label>
+                            <input id="newItemPrice" type="number" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="small">Category</label>
+                            <select id="newItemCategory" class="form-control">
+                                <option value="meals">Meals</option>
+                                <option value="snacks">Snacks</option>
+                                <option value="drinks">Drinks</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-danger btn-block py-2">ADD TO MENU</button>
+                    </form>
+                </div>
             </div>
-          </div>
+            <div class="col-md-8">
+                <div class="glass-card p-4">
+                    <h5 class="font-weight-bold mb-4">Current Menu</h5>
+                    <div class="table-responsive">
+                        <table class="table table-dark bg-transparent">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Price</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menuTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
-  </div>
+    <!-- ANALYTICS SECTION -->
+    <div id="section-analytics" class="owner-section animate-fade-in d-none">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="glass-card p-4">
+                    <h5>Revenue Stats</h5>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="glass-card p-4">
+                    <h5>Popular Items</h5>
+                    <canvas id="popularChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="/app.js"></script>
 <script>
-const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user"));
+    const socket = io();
+    const user = JSON.parse(localStorage.getItem('user'));
 
-if (!token || !user || user.role !== "owner") {
-  window.location.href = "/loginpage.html";
-}
+    async function init() {
+        if (!user || user.role !== 'owner') window.location.href = '/loginpage.html';
+        
+        // Join socket room for this canteen
+        socket.emit('join-canteen', user.canteen_id);
+        
+        socket.on('new-order', (data) => {
+            App.showToast("New order received!", "success");
+            loadOrders();
+        });
 
-function logout() {
-  localStorage.clear();
-  window.location.href = "/mainpage.html";
-}
-
-async function loadOrders() {
-  try {
-    const res = await fetch("/api/owner/orders", {
-      headers: { Authorization: "Bearer " + token }
-    });
-    if (!res.ok) throw new Error("Failed to load");
-    const data = await res.json();
-
-    let html = "";
-    data.reverse().forEach(o => {
-      html += `
-        <div class="card p-3 mb-3 order-item shadow-sm border-0">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <h6 class="font-weight-bold mb-1 text-danger">Order #${o.id}</h6>
-              <p class="small text-muted mb-0">Time: ${new Date(o.createdAt).toLocaleTimeString()}</p>
-            </div>
-            <div class="text-right">
-              <span class="badge badge-warning px-3 py-2">PENDING</span>
-              <h5 class="mt-2 mb-0 font-weight-bold text-dark">₹${o.total}</h5>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-
-    document.getElementById("ordersList").innerHTML = html || "<p class='text-center text-muted'>No orders found.</p>";
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-async function addItem() {
-  const name = document.getElementById("itemName").value.trim();
-  const price = document.getElementById("itemPrice").value;
-
-  try {
-    const res = await fetch("/api/owner/items", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-      body: JSON.stringify({
-        name,
-        price,
-        canteen_id: user.canteen_id
-      })
-    });
-
-    const data = await res.json();
-    if (res.ok) {
-      alert("Item added successfully!");
-      document.getElementById("itemName").value = "";
-      document.getElementById("itemPrice").value = "";
-    } else {
-      alert("Error: " + data.message);
+        loadOrders();
+        loadMenu();
     }
-  } catch (err) {
-    alert("Server error");
-  }
-}
 
-loadOrders();
-// Poll for new orders every 30 seconds (Vercel alternative to persistent sockets)
-setInterval(loadOrders, 30000);
+    async function loadOrders() {
+        const res = await App.fetchWithAuth('/api/owner/orders');
+        const orders = await res.json();
+        let html = '';
+        orders.forEach(o => {
+            html += `
+                <div class="glass-card p-4 order-card animate-fade-in">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="font-weight-bold mb-1">Order #${o.id}</h6>
+                            <p class="small text-muted mb-3">${new Date(o.createdAt).toLocaleString()}</p>
+                            <div class="mb-3">
+                                ${o.order_items.map(it => `<span class="badge badge-secondary mr-2">${it.item.name} x ${it.quantity}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="status-badge status-${o.status}">${o.status.toUpperCase()}</span>
+                            <h5 class="mt-2 font-weight-bold text-danger">₹${o.total}</h5>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-top border-secondary d-flex gap-2">
+                        ${o.status === 'pending' ? `<button class="btn btn-sm btn-info px-3" onclick="updateStatus(${o.id}, 'preparing')">PREPARE</button>` : ''}
+                        ${o.status === 'preparing' ? `<button class="btn btn-sm btn-success px-3" onclick="updateStatus(${o.id}, 'ready')">MARK READY</button>` : ''}
+                        ${o.status === 'ready' ? `<button class="btn btn-sm btn-primary px-3" onclick="updateStatus(${o.id}, 'completed')">COMPLETE</button>` : ''}
+                        <button class="btn btn-sm btn-outline-danger px-3 ml-auto" onclick="updateStatus(${o.id}, 'cancelled')">CANCEL</button>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('ordersContainer').innerHTML = html || '<div class="text-center py-5 text-muted">No active orders</div>';
+    }
+
+    async function updateStatus(id, status) {
+        // We'll need to implement this API
+        await App.fetchWithAuth(`/api/owner/orders/${id}/status`, {
+            method: 'PUT',
+            body: JSON.stringify({ status })
+        });
+        App.showToast(`Order updated to ${status}`);
+        loadOrders();
+    }
+
+    async function loadMenu() {
+        const res = await App.fetchWithAuth(`/api/canteens/${user.canteen_id}/menu`);
+        const items = await res.json();
+        let html = '';
+        items.forEach(it => {
+            html += `
+                <tr class="menu-item-row">
+                    <td>${it.name}</td>
+                    <td>₹${it.price}</td>
+                    <td><span class="small text-muted">${it.category}</span></td>
+                    <td><span class="badge ${it.is_active ? 'badge-success' : 'badge-danger'}">${it.is_active ? 'Active' : 'Hidden'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-link text-warning" onclick="toggleItem(${it.id})"><i class="fas fa-eye-slash"></i></button>
+                        <button class="btn btn-sm btn-link text-danger" onclick="deleteItem(${it.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        });
+        document.getElementById('menuTableBody').innerHTML = html;
+    }
+
+    function showSection(id) {
+        document.querySelectorAll('.owner-section').forEach(s => s.classList.add('d-none'));
+        document.getElementById('section-' + id).classList.remove('d-none');
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
 </script>
 
 </body>

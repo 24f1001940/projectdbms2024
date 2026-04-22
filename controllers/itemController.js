@@ -1,5 +1,14 @@
 const { Canteen, Item } = require("../models");
 
+exports.listItems = async (req, res) => {
+  try {
+    const items = await Item.findAll({ where: { is_active: true } });
+    res.json(items);
+  } catch (e) {
+    res.status(500).json({ message: "Error loading items" });
+  }
+};
+
 exports.listCanteens = async (req, res) => {
   try {
     const data = await Canteen.findAll();

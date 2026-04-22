@@ -26,8 +26,10 @@ exports.createOrder = async (req, res) => {
         user_id: req.user.id,
         canteen_id,
         payment_method,
-        total,
-        status: "placed"
+        subtotal: total,
+        tax: total * 0.05,
+        total: total * 1.05,
+        status: "pending"
       },
       { transaction: t }
     );

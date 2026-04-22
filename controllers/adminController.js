@@ -69,3 +69,29 @@ exports.createOwner = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+exports.exportData = async (req, res) => {
+    try {
+        const { type } = req.query; // 'users' or 'orders'
+        let data, filename, headers;
+
+        if (type === 'users') {
+            data = await User.findAll({ raw: true });
+            filename = 'users_export.csv';
+            headers = 'ID,Name,Email,Role,Joined\n';
+            data = data.map(u => `${u.id},${u.name},${u.email},${u.role},${u.createdAt}`).join('\n');
+        } else {
+            data = await Order.findAll({ raw: true });
+            filename = 'orders_export.csv';
+            headers = 'ID,UserID,CanteenID,Total,Status,Date\n';
+            data = data.map(o => `${o.id},${o.user_id},${o.canteen_id},${o.total},${o.status},${o.createdAt}`).join('\n');
+        }
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+        res.status(200).send(headers + data);
+    } catch (err) {
+        console.error('export error', err);
+        res.status(500).send('Export failed');
+    }
+};

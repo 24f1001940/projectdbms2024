@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Explore Canteens | Jamia Canteen</title>
+  <title>Order Food | Jamia Canteen</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -11,101 +11,218 @@
   <link rel="stylesheet" href="mainpages.css">
 
   <style>
-    body { background: #f8f9fa; color: #333; }
-    .hero-section { background: #1e1e2f; color: white; padding: 60px 0; margin-bottom: 40px; }
-    .canteen-card { 
-      border: none; 
-      border-radius: 15px; 
-      overflow: hidden; 
-      transition: 0.3s; 
-      background: white; 
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-    }
-    .canteen-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-    .card-img-top { height: 200px; object-fit: cover; }
-    .btn-explore { border-radius: 25px; font-weight: 600; padding: 8px 25px; }
+    .category-pill { border-radius: 25px; padding: 8px 25px; cursor: pointer; transition: var(--transition); border: 1px solid var(--glass-border); background: var(--glass-bg); }
+    .category-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .food-card { overflow: hidden; height: 100%; }
+    .food-card img { height: 180px; object-fit: cover; transition: var(--transition); }
+    .food-card:hover img { transform: scale(1.1); }
+    .cart-drawer { position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background: var(--glass-bg); backdrop-filter: blur(25px); z-index: 1050; transition: var(--transition); border-left: 1px solid var(--glass-border); padding: 2rem; box-shadow: -10px 0 30px rgba(0,0,0,0.2); }
+    .cart-drawer.active { right: 0; }
+    .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .qty-control { display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 2px 10px; }
   </style>
 </head>
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+  <nav class="navbar navbar-expand-lg glass-card fixed-top m-3">
     <div class="container">
       <a class="navbar-brand d-flex align-items-center" href="mainpage.html">
-        <i class="fas fa-utensils mr-2 text-warning"></i> 
-        <span class="font-weight-bold">JAMIA CANTEEN</span>
+        <i class="fas fa-utensils mr-2 text-gradient"></i> 
+        <span class="font-weight-bold">JAMIA EATS</span>
       </a>
-      <div class="ml-auto">
-        <a href="user.html" class="btn btn-outline-light btn-sm mr-2">Dashboard</a>
-        <button class="btn btn-danger btn-sm" onclick="localStorage.clear(); location.href='mainpage.html'">Logout</button>
+      
+      <div class="search-box flex-grow-1 mx-4 d-none d-md-block">
+        <div class="input-group">
+          <div class="input-group-prepend"><span class="input-group-text bg-transparent border-0 text-white-50"><i class="fas fa-search"></i></span></div>
+          <input type="text" class="form-control border-0" placeholder="Search for biryani, tea, snacks..." onkeyup="filterItems(this.value)">
+        </div>
+      </div>
+
+      <div class="ml-auto d-flex align-items-center">
+        <button class="btn btn-link text-white position-relative mr-3" onclick="toggleCart()">
+          <i class="fas fa-shopping-bag fa-lg"></i>
+          <span class="badge badge-danger badge-pill position-absolute" style="top:-5px; right:-5px" id="cart-count">0</span>
+        </button>
+        <div class="dropdown">
+            <img src="https://ui-avatars.com/api/?name=User" class="rounded-circle cursor-pointer" width="35" data-toggle="dropdown">
+            <div class="dropdown-menu dropdown-menu-right glass-card border-0">
+                <a class="dropdown-item" href="user.html"><i class="fas fa-user mr-2"></i>Dashboard</a>
+                <a class="dropdown-item" href="#" onclick="App.toggleTheme()"><i class="fas fa-moon mr-2"></i>Theme</a>
+                <div class="dropdown-divider border-secondary"></div>
+                <a class="dropdown-item text-danger" href="#" onclick="App.logout()"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
+            </div>
+        </div>
       </div>
     </div>
   </nav>
 
-  <div class="hero-section text-center">
-    <div class="container">
-      <h1 class="font-weight-bold mb-3">Discover Best Food on Campus</h1>
-      <p class="text-white-50">Choose your favorite canteen and order fresh meals instantly.</p>
+  <div class="container" style="margin-top: 120px;">
+    <!-- CATEGORIES -->
+    <div class="d-flex gap-3 mb-5 overflow-auto pb-2 no-scrollbar">
+      <div class="category-pill active" onclick="setCategory('all', this)">All Items</div>
+      <div class="category-pill" onclick="setCategory('meals', this)">Meals</div>
+      <div class="category-pill" onclick="setCategory('snacks', this)">Snacks</div>
+      <div class="category-pill" onclick="setCategory('drinks', this)">Drinks</div>
+    </div>
+
+    <!-- CANTEEN SELECTION -->
+    <div class="mb-4">
+        <h5 class="text-white-50 small text-uppercase font-weight-bold">Select Canteen</h5>
+        <select id="canteen-filter" class="form-control w-auto bg-transparent border-secondary text-white" onchange="loadItems()">
+            <option value="all">All Canteens</option>
+        </select>
+    </div>
+
+    <div id="items-grid" class="row">
+      <!-- Items will be loaded here -->
     </div>
   </div>
 
-  <div class="container mb-5">
-    <div id="canteenList" class="row">
-      <div class="col-12 text-center py-5">
-        <div class="spinner-border text-danger" role="status"></div>
-        <p class="mt-3 text-muted">Finding canteens...</p>
+  <!-- CART DRAWER -->
+  <div id="cart-drawer" class="cart-drawer">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="font-weight-bold mb-0">Your Bag</h4>
+      <button class="btn btn-sm btn-outline-light border-0" onclick="toggleCart()"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div id="cart-items" class="flex-grow-1 overflow-auto" style="max-height: calc(100vh - 250px);">
+      <!-- Cart items here -->
+    </div>
+
+    <div class="cart-footer mt-auto pt-4 border-top border-secondary">
+      <div class="d-flex justify-content-between mb-2">
+        <span class="text-white-50">Subtotal</span>
+        <span id="cart-subtotal">₹0.00</span>
       </div>
+      <div class="d-flex justify-content-between mb-4">
+        <span class="font-weight-bold">Total (incl. tax)</span>
+        <span class="h4 font-weight-bold text-danger" id="cart-total">₹0.00</span>
+      </div>
+      <button class="btn btn-danger btn-block py-3 font-weight-bold" onclick="goToCheckout()">CHECKOUT NOW</button>
     </div>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+  <script src="/app.js"></script>
   <script>
-    const images = [
-      "https://i0.wp.com/www.opindia.com/wp-content/uploads/2022/07/Jamia-canteen-e1658239372392.jpg",
-      "https://live.staticflickr.com/8114/8674068395_8699057f55_b.jpg",
-      "https://thevioletjourno.files.wordpress.com/2018/10/images-138355478744454222922.jpg",
-      "https://10619-2.s.cdn12.com/rests/original/109_506967486.jpg"
-    ];
+    let allItems = [];
+    let currentCategory = 'all';
+    let cart = JSON.parse(localStorage.getItem('bag') || '[]');
 
-    async function loadCanteens() {
-      try {
-        const res = await fetch("/api/canteens");
-        const data = await res.json();
-
-        let html = "";
-        data.forEach((c, index) => {
-          const img = images[index % images.length];
-          html += `
-            <div class="col-md-4 col-sm-6 mb-4">
-              <div class="card canteen-card h-100">
-                <img src="${img}" class="card-img-top" alt="${c.name}">
-                <div class="card-body d-flex flex-column">
-                  <h5 class="font-weight-bold mb-2">${c.name}</h5>
-                  <p class="text-muted small flex-grow-1">${c.description || "Fresh and healthy meals served daily with love and hygiene."}</p>
-                  <div class="mt-3">
-                    <button onclick="openMenu(${c.id})" class="btn btn-danger btn-explore btn-block">
-                      VIEW MENU <i class="fas fa-arrow-right ml-2"></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
+    async function init() {
+        const resC = await fetch('/api/canteens');
+        const canteens = await resC.json();
+        const select = document.getElementById('canteen-filter');
+        canteens.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.innerText = c.name;
+            select.appendChild(opt);
         });
-
-        document.getElementById("canteenList").innerHTML = html || "<div class='col-12 text-center'><p>No canteens available.</p></div>";
-      } catch (err) {
-        document.getElementById("canteenList").innerHTML = "<div class='col-12 text-center text-danger'><p>Failed to load canteens. Please check your connection.</p></div>";
-      }
+        
+        loadItems();
+        updateCartUI();
     }
 
-    function openMenu(id) {
-      window.location.href = "/canteencart.html?canteen=" + id;
+    async function loadItems() {
+        const canteenId = document.getElementById('canteen-filter').value;
+        const url = canteenId === 'all' ? '/api/items' : `/api/canteens/${canteenId}/menu`;
+        // Note: we need to implement /api/items to get all items
+        const res = await fetch(url);
+        allItems = await res.json();
+        renderItems();
     }
 
-    loadCanteens();
+    function renderItems() {
+        let filtered = allItems;
+        if (currentCategory !== 'all') {
+            filtered = allItems.filter(i => i.category === currentCategory);
+        }
+
+        let html = '';
+        filtered.forEach(it => {
+            html += `
+                <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                    <div class="glass-card food-card animate-fade-in">
+                        <img src="https://source.unsplash.com/400x300/?food,${it.name}" class="w-100" alt="${it.name}">
+                        <div class="p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="font-weight-bold mb-0">${it.name}</h6>
+                                <span class="badge badge-warning small">₹${it.price}</span>
+                            </div>
+                            <p class="small text-white-50 mb-3">${it.category}</p>
+                            <button class="btn btn-sm btn-primary-modern w-100" onclick="addToBag(${it.id}, '${it.name}', ${it.price})">
+                                <i class="fas fa-plus"></i> ADD TO BAG
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('items-grid').innerHTML = html || '<div class="col-12 text-center py-5 text-muted">No items found</div>';
+    }
+
+    function addToBag(id, name, price) {
+        const existing = cart.find(i => i.id === id);
+        if (existing) existing.qty++;
+        else cart.push({ id, name, price, qty: 1 });
+        updateCartUI();
+        App.showToast(`${name} added to bag`);
+    }
+
+    function updateCartUI() {
+        localStorage.setItem('bag', JSON.stringify(cart));
+        const count = cart.reduce((acc, i) => acc + i.qty, 0);
+        document.getElementById('cart-count').innerText = count;
+
+        let html = '';
+        let subtotal = 0;
+        cart.forEach((i, index) => {
+            subtotal += i.price * i.qty;
+            html += `
+                <div class="cart-item animate-fade-in">
+                    <div>
+                        <h6 class="font-weight-bold mb-0">${i.name}</h6>
+                        <small class="text-white-50">₹${i.price} each</small>
+                    </div>
+                    <div class="qty-control">
+                        <i class="fas fa-minus small cursor-pointer" onclick="updateQty(${index}, -1)"></i>
+                        <span class="font-weight-bold">${i.qty}</span>
+                        <i class="fas fa-plus small cursor-pointer" onclick="updateQty(${index}, 1)"></i>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('cart-items').innerHTML = html || '<p class="text-center text-white-50 mt-5">Your bag is empty</p>';
+        document.getElementById('cart-subtotal').innerText = `₹${subtotal.toFixed(2)}`;
+        document.getElementById('cart-total').innerText = `₹${(subtotal * 1.05).toFixed(2)}`; // 5% tax
+    }
+
+    function updateQty(index, delta) {
+        cart[index].qty += delta;
+        if (cart[index].qty <= 0) cart.splice(index, 1);
+        updateCartUI();
+    }
+
+    function toggleCart() {
+        document.getElementById('cart-drawer').classList.toggle('active');
+    }
+
+    function setCategory(cat, el) {
+        currentCategory = cat;
+        document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        renderItems();
+    }
+
+    function goToCheckout() {
+        if (cart.length === 0) return App.showToast("Your bag is empty", "error");
+        window.location.href = '/payment1.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>

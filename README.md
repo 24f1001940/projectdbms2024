@@ -1,109 +1,113 @@
-# 🍽️ Jamia Canteen Management System
+# 🍽️ Jamia Canteen Management System v2.0 (Pro)
 
-A premium, high-fidelity web application designed to streamline canteen operations at Jamia Millia Islamia. This system provides a seamless experience for students to order food, for owners to manage their menus and orders, and for administrators to oversee the entire system.
+A production-level, scalable, and modern SaaS-style web application designed to transform campus dining at Jamia Millia Islamia. Featuring advanced authentication, real-time tracking, and professional analytics.
 
 ## 🚀 Live Demo
 **URL:** [https://projectdbms2024.vercel.app](https://projectdbms2024.vercel.app)
 
 ---
 
-## ✨ Key Features
+## 🌟 Premium Features
 
-### 👤 User (Student/Faculty)
-- **Modern UI:** Beautiful glassmorphism design with a dark mode aesthetic.
-- **Browse Canteens:** Explore different canteens on campus.
-- **Easy Ordering:** Add items to a persistent cart and place orders instantly.
-- **Dashboard:** View profile details and real-time order history.
-- **Digital Receipts:** Get printable receipts for every successful order.
+### 🛡️ Advanced Authentication & Security
+- **JWT Refresh Tokens:** Secure session persistence with access token expiry (1h) and refresh cycles.
+- **Role-Based Access Control (RBAC):** Strict validation for Admin, Owner, and User roles.
+- **Device Security:** Logout from current session clears refresh tokens from the database.
+- **Strict Role Login:** Prevents admin access from user-facing login portals and vice-versa.
 
-### 🏪 Canteen Owner
-- **Order Management:** Track incoming orders in real-time.
-- **Menu Control:** Add new items to the menu with price and availability.
-- **Real-time Updates:** Instant feedback on order status.
+### 🎨 Modern UI/UX (Glassmorphism 2.0)
+- **Dynamic Theming:** Smooth toggle between **Dark Mode** and **Light Mode**.
+- **Sidebar Navigation:** Professional layout for all role-based dashboards.
+- **Command Palette:** Quick navigation and search via **Ctrl + K** keyboard shortcut.
+- **Toast Notifications:** Real-time feedback for actions like "Added to Bag" or "Status Updated".
+- **Responsive Design:** Fully optimized for Mobile, Tablet, and Desktop.
 
-### 🛡️ Administrator
-- **System Oversight:** Manage all users and canteens from a central dashboard.
-- **Owner Creation:** Assign owners to specific canteens with auto-generated credentials.
-- **Global Metrics:** Monitor total orders and system activity.
+### 👤 User Dashboard & Ordering
+- **Persistent Bag:** A modern side-drawer cart that saves your items across sessions.
+- **Global Search:** Find any food item instantly across all canteens.
+- **Real-Time Tracking:** Watch your order move through states (Pending → Preparing → Ready).
+- **Printable Receipts:** Professional digital invoices generated for every order.
+
+### 🏪 Owner Control Panel
+- **Live Order Stream:** Real-time Socket.IO notifications for incoming orders.
+- **Menu Management:** Add, edit, or toggle visibility of items with a clean table interface.
+- **Analytics:** Visualize revenue and popular items using **Chart.js**.
+
+### 🛡️ Admin Super-Command
+- **Global KPIs:** Monitor total users, daily orders, and system-wide revenue.
+- **User Management:** Promote roles or manage account status.
+- **Data Export:** Export Users or Orders data to **CSV** for external reporting.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Modern Tech Stack
 
-- **Frontend:** HTML5, CSS3 (Custom Glassmorphism), Bootstrap 4, FontAwesome.
-- **Backend:** Node.js, Express.js.
-- **Database:** Sequelize ORM (Supports **SQLite** for local dev & **MySQL** for production).
-- **Deployment:** Vercel (Serverless Functions), Railway (Cloud MySQL).
-- **Security:** JWT (JSON Web Tokens) for authentication, Bcrypt for password hashing.
+- **Frontend:** HTML5, CSS3 (Glassmorphism 2.0), Bootstrap 4, FontAwesome, **Chart.js**.
+- **Backend:** Node.js, Express.js, **Socket.io** (Real-time).
+- **Database:** Sequelize ORM (MySQL for Production, SQLite for Local).
+- **Security:** JWT (Refresh/Access flow), Bcrypt (Hashing).
+- **Deployment:** Vercel (Serverless Functions), Railway (MySQL Cluster).
 
 ---
 
-## 📂 Project Structure
+## 📂 Project Architecture
 
 ```text
 projectdbms2024/
-├── config/             # Database connection logic
-├── controllers/        # Business logic (Auth, Orders, Admin, etc.)
-├── models/             # Sequelize database models (User, Item, Order, etc.)
-├── public/             # Static frontend files (HTML, CSS, JS, Images)
-├── routes/             # API route definitions
-├── scripts/            # Utility scripts (Sync DB, create admin)
-├── server.js           # Main Express server entry point
-├── vercel.json         # Vercel deployment configuration
-└── .env                # Environment variables (Private)
+├── config/             # Sequelize & DB connection pool
+├── controllers/        # Modular business logic (Auth, Admin, Owner, Order)
+├── middlewares/        # Security, Auth & Role-check filters
+├── models/             # Advanced database schemas & relations
+├── public/             # Optimized frontend (app.js utilities, mainpages.css)
+├── routes/             # Consistent REST API structure
+├── scripts/            # Database seeding & migration tools
+├── server.js           # Serverless-ready Express entry point
+└── vercel.json         # Production routing & build config
 ```
 
 ---
 
-## ⚙️ Local Setup
+## ⚙️ Development & Setup
 
-1. **Clone the repository:**
+1. **Clone & Install:**
    ```bash
    git clone https://github.com/24f1001940/projectdbms2024.git
-   cd projectdbms2024
-   ```
-
-2. **Install dependencies:**
-   ```bash
    npm install
    ```
 
-3. **Configure Environment:**
-   Create a `.env` file in the root:
-   ```env
-   JWT_SECRET=your_secret_key
-   ADMIN_EMAIL=admin@gmail.com
-   ADMIN_PASS=admin123
-   # For local, it will automatically use SQLite.
-   # For production, add: DATABASE_URL=mysql://user:pass@host:port/db
+2. **Database Seeding (Crucial):**
+   Initialize the system with default canteens, items, and owners:
+   ```bash
+   npm run seed
    ```
 
-4. **Run the app:**
+3. **Environment Variables (.env):**
+   ```env
+   JWT_SECRET=asdfghkl@356464
+   JWT_REFRESH_SECRET=refresh_secret_987
+   ADMIN_EMAIL=admin@gmail.com
+   ADMIN_PASS=admin123
+   DATABASE_URL=your_mysql_url
+   ```
+
+4. **Run Locally:**
    ```bash
    npm run dev
    ```
-   Visit `http://localhost:3000`
 
 ---
 
-## 🔐 Credentials (Initial)
+## 🔐 Built-in Test Accounts (After Seeding)
 
-- **Admin Login:** `admin@gmail.com` / `admin123`
-- **User Signup:** Create any account via the Signup page.
-- **Owner Login:** Created by Admin (Credentials shown upon creation).
-
----
-
-## 🌐 Deployment to Vercel
-
-The project is configured for **Vercel Serverless Functions**. 
-- The `vercel.json` routes all traffic to `server.js`.
-- Database synchronization is handled via delayed middleware for serverless compatibility.
-- Ensure `JWT_SECRET` and `DATABASE_URL` are added to Vercel's Environment Variables.
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin@gmail.com` | `admin123` |
+| **Owner (Central)** | `owner_canteen1@gmail.com` | `canteen1` |
+| **User** | (Register your own) | (Your choice) |
 
 ---
 
-## 📜 License
-This project is for educational purposes as part of the Jamia Millia Islamia DBMS course.
+## 📜 License & Credit
+This project is an advanced DBMS transformation for Jamia Millia Islamia.
 
 Developed by **Saqib Abubakar**.

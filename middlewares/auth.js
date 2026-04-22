@@ -17,7 +17,8 @@ const auth = async (req, res, next) => {
       id: user.id,
       email: user.email,
       role: user.role,
-      name: user.name
+      name: user.name,
+      canteen_id: user.canteen_id
     };
     next();
   } catch (err) {

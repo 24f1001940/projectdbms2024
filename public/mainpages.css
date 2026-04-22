@@ -1,24 +1,131 @@
-/* mainpages.css - High Fidelity Design */
-
-/* 1. Global Reset & Typography */
-body {
-  margin: 0;
-  padding-top: 70px; /* Space for fixed navbar */
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
-  color: #333;
-  min-height: 100vh;
+:root {
+  --primary: #dc3545;
+  --secondary: #6c757d;
+  --bg-gradient: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --text-main: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --sidebar-width: 250px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-glass { color: rgba(255,255,255,0.8); }
-.bg-glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+[data-theme="light"] {
+  --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --text-main: #212529;
+  --text-muted: #6c757d;
+  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
 
-/* 2. Navbar Styling */
-.custom-navbar {
-  background: rgba(0, 0, 0, 0.85); /* Semi-transparent */
-  backdrop-filter: blur(10px); /* Glass blur effect */
-  padding: 15px 0;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+body {
+  margin: 0;
+  padding-top: 0; 
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-main);
+  min-height: 100vh;
+  transition: var(--transition);
+  overflow-x: hidden;
+}
+
+/* Glassmorphism 2.0 */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  transition: var(--transition);
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--glass-border);
+  padding: 2rem 1rem;
+  z-index: 1000;
+  transition: var(--transition);
+}
+
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding: 2rem;
+  transition: var(--transition);
+}
+
+@media (max-width: 992px) {
+  .sidebar { transform: translateX(-100%); }
+  .main-content { margin-left: 0; }
+  .sidebar.active { transform: translateX(0); }
+}
+
+/* Modern Buttons */
+.btn-modern {
+  border-radius: 12px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary-modern {
+  background: var(--primary);
+  color: white;
+  border: none;
+}
+
+.btn-primary-modern:hover {
+  filter: brightness(1.2);
+  transform: scale(1.02);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+/* Command Palette (K-Menu) */
+.cmd-palette {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 600px;
+  z-index: 2000;
+  display: none;
+}
+
+.cmd-palette.active { display: block; }
+
+/* Utilities */
+.text-gradient {
+  background: linear-gradient(to right, #ff416c, #ff4b2b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .navbar-brand {

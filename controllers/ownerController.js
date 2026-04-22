@@ -60,3 +60,53 @@ exports.updateItem = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const canteenId = req.user.canteen_id;
+
+    const order = await Order.findOne({ where: { id, canteen_id: canteenId } });
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    await order.update({ status });
+
+    // Emit Real-time Update
+    const io = req.app.get('io');
+    io.emit(`order-status-${order.user_id}`, { orderId: order.id, status });
+    io.emit('admin-activity', { message: `Order #${order.id} updated to ${status}` });
+
+    res.json({ message: "Status updated", order });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.toggleItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const canteenId = req.user.canteen_id;
+    const item = await Item.findOne({ where: { id, canteen_id: canteenId } });
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    await item.update({ is_active: !item.is_active });
+    res.json({ message: "Status toggled", item });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.deleteItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const canteenId = req.user.canteen_id;
+    const item = await Item.findOne({ where: { id, canteen_id: canteenId } });
+    if (!item) return res.status(404).json({ message: "Item not found" });
+
+    await item.destroy();
+    res.json({ message: "Item deleted" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

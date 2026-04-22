@@ -26,7 +26,10 @@ OrderItem.belongsTo(Order, { foreignKey: 'order_id' });
 // OrderItem ↔ Item
 OrderItem.belongsTo(Item, { as: 'item', foreignKey: 'item_id' });
 
+const { sequelize } = require('../config/db');
+
 module.exports = {
+  sequelize,
   User,
   Canteen,
   Item,
