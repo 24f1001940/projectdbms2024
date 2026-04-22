@@ -41,6 +41,7 @@
             <span class="navbar-text">Logged in as <strong id="adminName">Admin</strong></span>
             <div class="ml-auto">
                 <button class="btn btn-sm btn-outline-light mr-2" onclick="App.toggleTheme()"><i class="fas fa-moon"></i></button>
+                <button class="btn btn-sm btn-outline-light mr-2" onclick="App.logoutAll()"><i class="fas fa-user-lock mr-2"></i>Logout All</button>
                 <button class="btn btn-sm btn-danger px-4" onclick="exportData('orders')"><i class="fas fa-file-export mr-2"></i>Export CSV</button>
             </div>
         </div>
@@ -102,7 +103,7 @@
         <div class="glass-card p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="font-weight-bold">Registered Users</h5>
-                <input type="text" class="form-control w-25" placeholder="Search users..." onkeyup="filterUsers(this.value)">
+                <input id="userSearch" type="text" class="form-control w-25" placeholder="Search users..." oninput="filterUsers(this.value)">
             </div>
             <div class="table-responsive">
                 <table class="table table-dark bg-transparent">
@@ -111,6 +112,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Status</th>
                             <th>Joined</th>
                             <th>Actions</th>
                         </tr>
@@ -155,31 +157,45 @@
 <script>
     const socket = io();
     let orderChart;
+    let allUsers = [];
+    let allCanteens = [];
 
     async function initDashboard() {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || user.role !== 'admin') window.location.href = '/loginpage.html';
         document.getElementById('adminName').innerText = user.name;
 
-        loadStats();
+        await loadStats();
         loadCharts();
-        loadUsers();
-        loadCanteens();
+        await loadUsers();
+        await loadCanteens();
+
+        socket.on('admin-activity', (payload) => {
+            const container = document.getElementById('liveActivity');
+            const entry = document.createElement('div');
+            entry.className = 'border-bottom border-secondary py-2';
+            entry.innerHTML = `<div class="small text-white-50">${new Date().toLocaleTimeString()}</div><div>${payload.message}</div>`;
+            container.prepend(entry);
+        });
     }
 
     async function loadStats() {
         try {
-            const [users, orders, ordersAll] = await Promise.all([
-                App.fetchWithAuth('/api/admin/users').then(res => res.json()),
-                App.fetchWithAuth('/api/admin/orders').then(res => res.json()),
-                App.fetchWithAuth('/api/admin/orders').then(res => res.json())
-            ]);
+            const res = await App.fetchWithAuth('/api/admin/stats');
+            const data = await res.json();
 
-            document.getElementById('stat-users').innerText = users.length;
-            document.getElementById('stat-orders').innerText = orders.length;
-            const revenue = orders.reduce((acc, o) => acc + Number(o.total), 0);
-            document.getElementById('stat-revenue').innerText = revenue.toFixed(0);
-        } catch (e) { console.error(e); }
+            document.getElementById('stat-users').innerText = data.totalUsers || 0;
+            document.getElementById('stat-orders').innerText = data.totalOrders || 0;
+            document.getElementById('stat-revenue').innerText = Number(data.revenue || 0).toFixed(0);
+
+            if (orderChart) {
+                orderChart.data.labels = (data.ordersPerDay || []).map((entry) => entry.date.slice(5));
+                orderChart.data.datasets[0].data = (data.ordersPerDay || []).map((entry) => entry.count);
+                orderChart.update();
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     function loadCharts() {
@@ -190,33 +206,142 @@
                 labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
                 datasets: [{
                     label: 'Orders',
-                    data: [12, 19, 3, 5, 2, 3, 10],
-                    borderColor: '#dc3545',
+                    data: [0, 0, 0, 0, 0, 0, 0],
+                    borderColor: '#ffb703',
                     tension: 0.4,
                     fill: true,
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)'
+                    backgroundColor: 'rgba(255, 183, 3, 0.12)',
+                    pointRadius: 4,
+                    pointBackgroundColor: '#ffb703'
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.06)' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.06)' }, beginAtZero: true }
+                }
+            }
         });
     }
 
     async function loadUsers() {
         const res = await App.fetchWithAuth('/api/admin/users');
-        const users = await res.json();
-        let html = '';
-        users.forEach(u => {
-            html += `<tr>
+        allUsers = await res.json();
+        renderUsers(allUsers);
+    }
+
+    function renderUsers(users) {
+        const tbody = document.getElementById('userTableBody');
+        if (!users.length) {
+            tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fas fa-users"></i><div>No users found</div></div></td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = users.map(u => `
+            <tr>
                 <td>${u.name}</td>
                 <td>${u.email}</td>
-                <td><span class="badge ${u.role === 'admin' ? 'badge-danger' : 'badge-secondary'}">${u.role}</span></td>
+                <td>
+                    <select class="form-control form-control-sm bg-transparent text-white border-secondary" onchange="updateRole(${u.id}, this.value)">
+                        ${['user', 'owner', 'admin'].map(role => `<option value="${role}" ${u.role === role ? 'selected' : ''}>${role}</option>`).join('')}
+                    </select>
+                </td>
+                <td><span class="badge ${u.email_verified ? 'badge-success' : 'badge-warning'}">${u.email_verified ? 'Verified' : 'Pending'}</span></td>
                 <td>${new Date(u.createdAt).toLocaleDateString()}</td>
                 <td>
                     <button class="btn btn-sm btn-link text-danger" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button>
                 </td>
-            </tr>`;
+            </tr>
+        `).join('');
+    }
+
+    function filterUsers(query) {
+        const filtered = allUsers.filter(user => `${user.name} ${user.email} ${user.role}`.toLowerCase().includes(String(query).toLowerCase()));
+        renderUsers(filtered);
+    }
+
+    async function updateRole(id, role) {
+        const res = await App.fetchWithAuth(`/api/admin/users/${id}/role`, {
+            method: 'PATCH',
+            body: JSON.stringify({ role })
         });
-        document.getElementById('userTableBody').innerHTML = html;
+        if (res.ok) {
+            App.showToast('Role updated');
+            loadUsers();
+        }
+    }
+
+    async function deleteUser(id) {
+        if (!confirm('Delete this user?')) return;
+        const res = await App.fetchWithAuth(`/api/admin/users/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            App.showToast('User deleted');
+            loadUsers();
+        }
+    }
+
+    async function loadCanteens() {
+        const res = await App.fetchWithAuth('/api/admin/canteens');
+        allCanteens = await res.json();
+        document.getElementById('stat-canteens').innerText = allCanteens.length;
+
+        const grid = document.getElementById('canteenGrid');
+        if (!allCanteens.length) {
+            grid.innerHTML = `<div class="col-12"><div class="empty-state"><i class="fas fa-store"></i><div>No canteens yet</div></div></div>`;
+            return;
+        }
+
+        grid.innerHTML = allCanteens.map(canteen => `
+            <div class="col-md-6 mb-3">
+                <div class="panel-surface p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="font-weight-bold mb-1">${canteen.name}</h6>
+                            <div class="small text-muted">${canteen.location || 'No location set'}</div>
+                            <div class="small mt-2">${canteen.description || ''}</div>
+                        </div>
+                        <span class="badge ${canteen.is_active ? 'badge-success' : 'badge-secondary'}">${canteen.is_active ? 'Active' : 'Inactive'}</span>
+                    </div>
+                    <div class="mt-3 d-flex justify-content-end">
+                        <button class="btn btn-sm btn-outline-danger mr-2" onclick="deleteCanteen(${canteen.id})">Delete</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function addCanteen() {
+        const name = document.getElementById('canteenName').value.trim();
+        const location = document.getElementById('canteenLocation').value.trim();
+        if (!name) return App.showToast('Canteen name is required', 'error');
+
+        const res = await App.fetchWithAuth('/api/admin/canteens', {
+            method: 'POST',
+            body: JSON.stringify({ name, location })
+        });
+
+        if (res.ok) {
+            document.getElementById('canteenName').value = '';
+            document.getElementById('canteenLocation').value = '';
+            App.showToast('Canteen created');
+            loadCanteens();
+        }
+    }
+
+    async function deleteCanteen(id) {
+        if (!confirm('Delete this canteen?')) return;
+        const res = await App.fetchWithAuth(`/api/admin/canteens/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            App.showToast('Canteen deleted');
+            loadCanteens();
+        }
+    }
+
+    async function exportData(type) {
+        window.location.href = `/api/admin/export?type=${type}`;
     }
 
     function showSection(id) {

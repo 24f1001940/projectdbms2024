@@ -11,12 +11,12 @@
   <link rel="stylesheet" href="mainpages.css">
 
   <style>
-    body { background: #f8f9fa; color: #333; }
-    .user-hero { background: linear-gradient(rgba(30, 30, 47, 0.8), rgba(30, 30, 47, 0.8)), url('https://thumbs.dreamstime.com/b/different-spices-herbs-stone-table-top-view-ingredients-cooking-food-background-different-spices-herbs-black-120232209.jpg'); background-size: cover; color: white; padding: 60px 0; }
-    .dashboard-card { border: none; border-radius: 15px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-    .section-title { font-weight: 700; color: #dc3545; margin-bottom: 20px; }
-    .order-history-item { border-left: 4px solid #28a745; margin-bottom: 15px; transition: 0.3s; }
-    .order-history-item:hover { background: #f1f8f1; }
+    body { background: var(--bg-gradient); color: var(--text-main); }
+    .user-hero { background: linear-gradient(rgba(10, 15, 35, 0.85), rgba(10, 15, 35, 0.85)), url('https://thumbs.dreamstime.com/b/different-spices-herbs-stone-table-top-view-ingredients-cooking-food-background-different-spices-herbs-black-120232209.jpg'); background-size: cover; color: white; padding: 60px 0; }
+    .dashboard-card { border: none; border-radius: 18px; background: var(--glass-bg); backdrop-filter: blur(14px); box-shadow: var(--card-shadow); }
+    .section-title { font-weight: 700; color: var(--primary); margin-bottom: 20px; }
+    .order-history-item { border-left: 4px solid var(--accent-2); margin-bottom: 15px; transition: 0.3s; }
+    .order-history-item:hover { background: rgba(255,255,255,0.06); }
   </style>
 </head>
 <body>
@@ -29,6 +29,7 @@
       </a>
       <div class="ml-auto">
         <a href="explore.html" class="btn btn-warning btn-sm mr-2 font-weight-bold">ORDER NOW</a>
+        <button class="btn btn-outline-light btn-sm mr-2" onclick="App.toggleTheme()"><i class="fas fa-moon"></i></button>
         <button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout</button>
       </div>
     </div>
@@ -47,20 +48,69 @@
       <div class="col-md-4 mb-4">
         <div class="card dashboard-card p-4 text-center">
           <div class="mb-3">
-            <i class="fas fa-user-circle fa-5x text-secondary"></i>
+            <img id="profileAvatar" src="https://ui-avatars.com/api/?name=User" class="rounded-circle shadow-sm" width="96" height="96" alt="Profile avatar">
           </div>
           <h4 id="profileName" class="font-weight-bold mb-1">...</h4>
           <p id="profileEmail" class="text-muted small">...</p>
           <hr>
           <div class="text-left small">
-            <p class="mb-1"><strong>Role:</strong> <span class="badge badge-danger">Customer</span></p>
+            <p class="mb-1"><strong>Role:</strong> <span class="badge badge-info" id="profileRole">Customer</span></p>
             <p class="mb-1"><strong>Account Created:</strong> <span id="accountDate">...</span></p>
           </div>
         </div>
       </div>
 
-      <!-- Recent Orders -->
+      <!-- Profile Settings -->
       <div class="col-md-8 mb-4">
+        <div class="card dashboard-card p-4 mb-4">
+          <h4 class="section-title">Edit Profile</h4>
+          <form id="profileForm" onsubmit="event.preventDefault(); saveProfile();">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small text-muted">Full Name</label>
+                  <input id="profileInputName" class="form-control" placeholder="Your name">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small text-muted">Email</label>
+                  <input id="profileInputEmail" type="email" class="form-control" placeholder="name@example.com">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small text-muted">Avatar</label>
+                  <input id="profileInputAvatar" type="file" class="form-control-file text-white" accept="image/*">
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small text-muted">New Password</label>
+                  <input id="profileNewPassword" type="password" class="form-control" placeholder="Leave blank to keep current">
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label class="small text-muted">Current Password</label>
+                  <input id="profileCurrentPassword" type="password" class="form-control" placeholder="Required when changing password">
+                </div>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+              <button class="btn btn-primary-modern mr-2" type="submit">Save Profile</button>
+              <button class="btn btn-outline-danger" type="button" onclick="changePasswordOnly()">Change Password</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <div class="col-md-12 mb-4">
         <div class="card dashboard-card p-4">
           <h4 class="section-title">Your Recent Orders</h4>
           <div id="orderHistory">
@@ -74,7 +124,9 @@
     </div>
   </div>
 
+  <script src="/app.js"></script>
   <script>
+    if (typeof App !== 'undefined') App.initTheme();
     const token = localStorage.getItem("token");
     const userData = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -83,22 +135,25 @@
     document.getElementById("welcomeUser").innerText = `Welcome, ${userData.name || 'User'}`;
     document.getElementById("profileName").innerText = userData.name || 'User';
     document.getElementById("profileEmail").innerText = userData.email || '';
+    document.getElementById("profileRole").innerText = userData.role || 'user';
+    document.getElementById("profileAvatar").src = userData.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name || 'User')}`;
+    document.getElementById('profileInputName').value = userData.name || '';
+    document.getElementById('profileInputEmail').value = userData.email || '';
 
     function logout() {
+      if (typeof App !== 'undefined') {
+        App.logout();
+        return;
+      }
       localStorage.clear();
       window.location.href = "/mainpage.html";
     }
 
     async function loadOrders() {
-      // Note: Backend might need an endpoint for user-specific orders
-      // For now, if we don't have one, we show a message or fetch all if it's filtered by middleware
       try {
-        // Mocking behavior or using potential endpoint
-        const res = await fetch("/api/orders/my", { // We should create this endpoint
-          headers: { Authorization: "Bearer " + token }
-        });
-        
-        // If /api/orders/my doesn't exist, we fallback or just handle error
+        const res = await (typeof App !== 'undefined'
+          ? App.fetchWithAuth('/api/orders/my')
+          : fetch('/api/orders/my', { headers: { Authorization: 'Bearer ' + token } }));
         if (!res.ok) {
            document.getElementById("orderHistory").innerHTML = "<p class='text-center text-muted py-4'>No orders found yet. <br><a href='explore.html' class='text-danger font-weight-bold'>Order something delicious!</a></p>";
            return;
@@ -107,12 +162,14 @@
         const data = await res.json();
         let html = "";
         data.reverse().forEach(o => {
+          const status = o.status || 'pending';
           html += `
             <div class="card p-3 order-history-item border-top-0 border-right-0 border-bottom-0">
               <div class="d-flex justify-content-between align-items-center">
                 <div>
                   <h6 class="font-weight-bold mb-0">Order #${o.id}</h6>
                   <small class="text-muted">${new Date(o.createdAt).toLocaleDateString()}</small>
+                  <div class="mt-2"><span class="badge badge-pill ${status === 'completed' ? 'badge-success' : status === 'ready' ? 'badge-primary' : status === 'preparing' ? 'badge-info' : 'badge-warning'}">${status}</span></div>
                 </div>
                 <div class="text-right">
                   <span class="text-success font-weight-bold">₹${o.total}</span> <br>
@@ -123,11 +180,97 @@
           `;
         });
         document.getElementById("orderHistory").innerHTML = html || "<p class='text-muted'>No orders placed yet.</p>";
+        document.getElementById("accountDate").innerText = userData.createdAt ? new Date(userData.createdAt).toLocaleDateString() : '—';
       } catch(err) {
         document.getElementById("orderHistory").innerHTML = "<p class='text-muted'>Unable to load orders.</p>";
       }
     }
 
+    async function refreshProfile() {
+      try {
+        if (typeof App === 'undefined') return;
+        const res = await App.fetchWithAuth('/api/profile');
+        if (!res.ok) return;
+        const profile = await res.json();
+        document.getElementById('profileName').innerText = profile.name;
+        document.getElementById('profileEmail').innerText = profile.email;
+        document.getElementById('profileRole').innerText = profile.role;
+        document.getElementById('profileAvatar').src = profile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || 'User')}`;
+        document.getElementById('accountDate').innerText = new Date(profile.createdAt).toLocaleDateString();
+        document.getElementById('profileInputName').value = profile.name || '';
+        document.getElementById('profileInputEmail').value = profile.email || '';
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    async function saveProfile() {
+      try {
+        const name = document.getElementById('profileInputName').value.trim();
+        const email = document.getElementById('profileInputEmail').value.trim();
+        const avatarFile = document.getElementById('profileInputAvatar').files[0];
+        const password = document.getElementById('profileNewPassword').value;
+        const currentPassword = document.getElementById('profileCurrentPassword').value;
+
+        const formData = new FormData();
+        if (name) formData.append('name', name);
+        if (email) formData.append('email', email);
+        if (avatarFile) formData.append('avatar', avatarFile);
+
+        const res = await App.fetchWithAuth('/api/profile', {
+          method: 'PUT',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Profile update failed');
+
+        localStorage.setItem('user', JSON.stringify(data.user || { ...userData, name, email }));
+        App.showToast('Profile updated');
+
+        if (password) {
+          await changePasswordOnly();
+        } else {
+          refreshProfile();
+        }
+      } catch (error) {
+        App.showToast(error.message || 'Unable to save profile', 'error');
+      }
+    }
+
+    async function changePasswordOnly() {
+      const currentPassword = document.getElementById('profileCurrentPassword').value;
+      const newPassword = document.getElementById('profileNewPassword').value;
+
+      if (!newPassword) {
+        App.showToast('New password is required', 'error');
+        return;
+      }
+      if (!currentPassword) {
+        App.showToast('Current password is required', 'error');
+        return;
+      }
+
+      const res = await App.fetchWithAuth('/api/profile/password', {
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        App.showToast(data.message || 'Password change failed', 'error');
+        return;
+      }
+
+      if (data.token) localStorage.setItem('token', data.token);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+
+      document.getElementById('profileNewPassword').value = '';
+      document.getElementById('profileCurrentPassword').value = '';
+      App.showToast('Password changed');
+    }
+
+    refreshProfile();
     loadOrders();
   </script>
 </body>

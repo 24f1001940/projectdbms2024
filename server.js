@@ -30,6 +30,7 @@ app.use(
 // STATIC FILES
 // ------------------------------------------------------------
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
@@ -38,7 +39,73 @@ app.set("view engine", "ejs");
 // ------------------------------------------------------------
 const { sequelize } = require('./config/db');
 const bcrypt = require('bcrypt');
-const { User } = require('./models');
+const { User, Canteen, Item } = require('./models');
+
+const systemLogs = [];
+app.set('systemLogs', systemLogs);
+app.set('logEvent', (type, message, meta = {}) => {
+  systemLogs.push({
+    id: systemLogs.length + 1,
+    type,
+    message,
+    meta,
+    createdAt: new Date().toISOString()
+  });
+  if (systemLogs.length > 200) {
+    systemLogs.shift();
+  }
+});
+
+const defaultCanteens = [
+  {
+    name: 'Central Canteen',
+    location: 'Near Gate 7',
+    description: 'Campus hub for hearty meals and quick student favorites.',
+    items: [
+      { name: 'Chicken Biryani', price: 120, category: 'meals' },
+      { name: 'Veg Thali', price: 80, category: 'meals' },
+      { name: 'Samosa', price: 15, category: 'snacks' },
+      { name: 'Masala Tea', price: 10, category: 'drinks' },
+      { name: 'Cold Coffee', price: 40, category: 'drinks' }
+    ]
+  },
+  {
+    name: 'Castro Cafe',
+    location: 'Near Library',
+    description: 'Coffee, sandwiches, and study-session essentials.',
+    items: [
+      { name: 'Paneer Patties', price: 25, category: 'snacks' },
+      { name: 'Chicken Sandwich', price: 50, category: 'snacks' },
+      { name: 'Espresso', price: 30, category: 'drinks' },
+      { name: 'Blueberry Muffin', price: 60, category: 'snacks' },
+      { name: 'Iced Tea', price: 35, category: 'drinks' }
+    ]
+  },
+  {
+    name: 'FET Canteen',
+    location: 'Engineering Block',
+    description: 'Fast, filling meals for busy engineering students.',
+    items: [
+      { name: 'Chole Bhature', price: 60, category: 'meals' },
+      { name: 'Maggi', price: 30, category: 'snacks' },
+      { name: 'Bread Pakora', price: 20, category: 'snacks' },
+      { name: 'Lassi', price: 40, category: 'drinks' },
+      { name: 'Burger', price: 45, category: 'snacks' }
+    ]
+  },
+  {
+    name: 'Hygienic Canteen',
+    location: 'Hostel Area',
+    description: 'Fresh, clean, and balanced meals for daily dining.',
+    items: [
+      { name: 'Fruit Salad', price: 50, category: 'snacks' },
+      { name: 'Boiled Eggs', price: 20, category: 'snacks' },
+      { name: 'Fresh Lime Soda', price: 25, category: 'drinks' },
+      { name: 'Oats Meal', price: 70, category: 'meals' },
+      { name: 'Green Tea', price: 15, category: 'drinks' }
+    ]
+  }
+];
 
 async function ensureAdmin() {
   try {
@@ -55,11 +122,49 @@ async function ensureAdmin() {
       name: 'Administrator',
       email: adminEmail,
       password_hash: hash,
-      role: 'admin'
+      role: 'admin',
+      email_verified: true
     });
     console.log('Admin account created:', adminEmail);
   } catch (err) {
     console.error('ensureAdmin error', err);
+  }
+}
+
+async function ensureDemoData() {
+  const count = await Canteen.count();
+  if (count > 0) {
+    return;
+  }
+
+  for (const canteenData of defaultCanteens) {
+    const canteen = await Canteen.create({
+      name: canteenData.name,
+      location: canteenData.location,
+      description: canteenData.description,
+      is_active: true
+    });
+
+    for (const item of canteenData.items) {
+      await Item.create({
+        ...item,
+        canteen_id: canteen.id,
+        stock: 100,
+        is_active: true
+      });
+    }
+
+    const ownerEmail = `owner_canteen${canteen.id}@gmail.com`;
+    const ownerPass = `canteen${canteen.id}`;
+    const ownerHash = await bcrypt.hash(ownerPass, 10);
+    await User.create({
+      name: `${canteen.name} Owner`,
+      email: ownerEmail,
+      password_hash: ownerHash,
+      role: 'owner',
+      canteen_id: canteen.id,
+      email_verified: true
+    });
   }
 }
 
@@ -69,8 +174,9 @@ let isSynced = false;
 app.use(async (req, res, next) => {
   if (!isSynced && process.env.NODE_ENV === 'production') {
     try {
-      await sequelize.sync();
+      await sequelize.sync({ alter: false });
       await ensureAdmin();
+      await ensureDemoData();
       isSynced = true;
     } catch (err) {
       console.error("Delayed Sync Error:", err);
@@ -80,7 +186,10 @@ app.use(async (req, res, next) => {
 });
 
 if (process.env.NODE_ENV !== 'production') {
-  sequelize.sync().then(() => ensureAdmin());
+  sequelize.sync({ alter: true }).then(async () => {
+    await ensureAdmin();
+    await ensureDemoData();
+  });
 }
 
 // ------------------------------------------------------------

@@ -18,12 +18,16 @@ const App = {
   // 2. Auth & Token Management
   async fetchWithAuth(url, options = {}) {
     let token = localStorage.getItem('token');
-    
+
+    const hasFormDataBody = typeof FormData !== 'undefined' && options.body instanceof FormData;
     options.headers = {
       ...options.headers,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
+      'Authorization': `Bearer ${token}`
     };
+
+    if (!hasFormDataBody && !(options.body instanceof URLSearchParams)) {
+      options.headers['Content-Type'] = options.headers['Content-Type'] || 'application/json';
+    }
 
     let response = await fetch(url, options);
 
@@ -55,15 +59,46 @@ const App = {
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem('token', data.token);
+        if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+        if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
         return true;
       }
     } catch (e) { console.error(e); }
     return false;
   },
 
-  logout() {
-    localStorage.clear();
-    window.location.href = '/mainpage.html';
+  async logout() {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      localStorage.clear();
+      window.location.href = '/mainpage.html';
+    }
+  },
+
+  async logoutAll() {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await fetch('/api/auth/logout-all', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      localStorage.clear();
+      window.location.href = '/mainpage.html';
+    }
   },
 
   // 3. UI Helpers

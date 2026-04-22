@@ -39,6 +39,8 @@
             <div class="dropdown-menu dropdown-menu-right shadow-lg border-0">
               <a class="dropdown-item" href="loginpage.html"><i class="fas fa-user mr-2"></i>User Login</a>
               <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="ownerlogin.html"><i class="fas fa-store mr-2"></i>Owner Login</a>
+              <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="adminloginpage.html"><i class="fas fa-user-shield mr-2"></i>Admin Login</a>
             </div>
           </li>
@@ -188,13 +190,14 @@
 
  
   <script src="/login.js"></script>
+  <script src="/app.js"></script>
   <script>
     async function mainLoginUser() {
       const email = document.getElementById("main_email").value;
       const password = document.getElementById("main_password").value;
       
       // performLogin already handles alerts and redirects
-      await performLogin(email, password);
+      await performLogin(email, password, 'user');
     }
   </script>
 

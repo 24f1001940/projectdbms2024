@@ -1,5 +1,5 @@
 function loadCart() {
-  let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  let cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
 
   let total = 0;
   let html = "";
@@ -23,7 +23,7 @@ function loadCart() {
 
 async function placeOrder() {
   const token = localStorage.getItem("token");
-  let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+  let cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
 
   if (!cart.length) return alert("Cart is empty!");
 
@@ -37,8 +37,9 @@ async function placeOrder() {
       Authorization: "Bearer " + token
     },
     body: JSON.stringify({
-      canteenId: canteen,
-      items: cart
+      canteen_id: Number(canteen),
+      items: cart.map((item) => ({ item_id: item.item_id || item.id, quantity: item.qty || item.quantity || 1 })),
+      payment_method: 'cash'
     })
   });
 
@@ -46,8 +47,8 @@ async function placeOrder() {
 
   if (res.ok) {
     alert("Order placed!");
-    localStorage.removeItem("cart");
-    window.location.href = "/receipt.html?order=" + data.order.id;
+    localStorage.removeItem("canteen_cart");
+    window.location.href = "/receipt.html?order=" + data.orderId;
   } else {
     alert(data.message);
   }

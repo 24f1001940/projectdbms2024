@@ -55,6 +55,9 @@
         <button class="btn btn-dark btn-block mb-2 py-2 font-weight-bold" onclick="window.print()">
           <i class="fas fa-print mr-2"></i> PRINT RECEIPT
         </button>
+        <button class="btn btn-outline-danger btn-block mb-2 py-2 font-weight-bold" onclick="downloadInvoice()">
+          <i class="fas fa-file-pdf mr-2"></i> DOWNLOAD PDF
+        </button>
         <a href="user.html" class="btn btn-outline-secondary btn-block py-2">Go to Dashboard</a>
       </div>
     </div>
@@ -66,9 +69,42 @@
   </div>
 
   <script>
+    let currentOrderId = null;
+    let currentToken = null;
+
+    function downloadInvoice() {
+      if (!currentOrderId || !currentToken) {
+        alert('Receipt is not ready yet.');
+        return;
+      }
+
+      fetch(`/api/orders/${currentOrderId}/invoice.pdf`, {
+        headers: { Authorization: 'Bearer ' + currentToken }
+      })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error('Failed to download invoice');
+          }
+          return res.blob();
+        })
+        .then((blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `invoice-${currentOrderId}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.URL.revokeObjectURL(url);
+        })
+        .catch(() => alert('Failed to download PDF receipt'));
+    }
+
     async function loadReceipt() {
       const orderId = new URLSearchParams(window.location.search).get('order');
       const token = localStorage.getItem('token');
+      currentOrderId = orderId;
+      currentToken = token;
       
       if (!orderId || !token) {
         document.body.innerHTML = "<div class='text-center mt-5'><h3>Access Denied</h3><a href='/loginpage.html'>Login here</a></div>";
@@ -76,17 +112,17 @@
       }
 
       try {
-        const res = await fetch(`/api/orders/${orderId}`, {
+        const res = await fetch(`/api/orders/${orderId}/invoice`, {
           headers: { Authorization: "Bearer " + token }
         });
         const o = await res.json();
         
         if (!res.ok) throw new Error();
 
-        document.getElementById('orderId').innerText = `Order #${o.id}`;
+        document.getElementById('orderId').innerText = `${o.invoiceNumber || `Order #${o.orderId || orderId}`}`;
         document.getElementById('orderDate').innerText = new Date(o.createdAt).toLocaleString();
-        document.getElementById('grandTotal').innerText = `₹${o.total.toFixed(2)}`;
-        document.getElementById('paymentMethod').innerText = `Payment Method: ${o.payment_method.toUpperCase()}`;
+        document.getElementById('grandTotal').innerText = `₹${Number(o.total).toFixed(2)}`;
+        document.getElementById('paymentMethod').innerText = `Payment Method: ${(o.payment_method || 'cash').toUpperCase()}`;
 
         let itemsHtml = "";
         const items = o.order_items || [];
@@ -103,6 +139,7 @@
           `;
         });
         document.getElementById('itemsList').innerHTML = itemsHtml || "<p class='text-muted'>No items found.</p>";
+        document.title = `${o.invoiceNumber || 'Invoice'} | Jamia Canteen`;
 
       } catch (err) {
         alert("Failed to load receipt");

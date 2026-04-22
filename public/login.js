@@ -1,7 +1,7 @@
 // public/login.js
 // UNIVERSAL LOGIN HANDLER FOR ALL LOGIN PAGES
 
-async function performLogin(email, password, loginRole = null) {
+async function performLogin(email, password, loginRole = 'user') {
   try {
     const res = await fetch("/api/auth/login", {
       method: "POST",

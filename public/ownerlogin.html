@@ -38,11 +38,12 @@
     </div>
   </div>
 <script src="/login.js"></script>
+<script src="/app.js"></script>
 <script>
 async function ownerLogin() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("pwd").value;
-  const login = await performLogin(email, password);
+  const login = await performLogin(email, password, 'owner');
   if (login && login.user.role !== "owner") {
     alert("This is not an owner account!");
     localStorage.clear();

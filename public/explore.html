@@ -109,10 +109,12 @@
   <script>
     let allItems = [];
     let currentCategory = 'all';
-    let cart = JSON.parse(localStorage.getItem('bag') || '[]');
+    let cart = JSON.parse(localStorage.getItem('canteen_cart') || '[]');
+    let searchTerm = '';
 
     async function init() {
-        const resC = await fetch('/api/canteens');
+      App.initTheme();
+      const resC = await fetch('/api/canteens');
         const canteens = await resC.json();
         const select = document.getElementById('canteen-filter');
         canteens.forEach(c => {
@@ -128,9 +130,11 @@
 
     async function loadItems() {
         const canteenId = document.getElementById('canteen-filter').value;
-        const url = canteenId === 'all' ? '/api/items' : `/api/canteens/${canteenId}/menu`;
-        // Note: we need to implement /api/items to get all items
-        const res = await fetch(url);
+      const params = new URLSearchParams();
+      if (canteenId !== 'all') params.set('canteen_id', canteenId);
+      if (searchTerm) params.set('q', searchTerm);
+      const url = `/api/items${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await fetch(url);
         allItems = await res.json();
         renderItems();
     }
@@ -139,6 +143,9 @@
         let filtered = allItems;
         if (currentCategory !== 'all') {
             filtered = allItems.filter(i => i.category === currentCategory);
+        }
+        if (searchTerm) {
+          filtered = filtered.filter(i => i.name.toLowerCase().includes(searchTerm.toLowerCase()));
         }
 
         let html = '';
@@ -161,19 +168,19 @@
                 </div>
             `;
         });
-        document.getElementById('items-grid').innerHTML = html || '<div class="col-12 text-center py-5 text-muted">No items found</div>';
+          document.getElementById('items-grid').innerHTML = html || '<div class="col-12"><div class="empty-state"><i class="fas fa-magnifying-glass"></i><div>No items found</div></div></div>';
     }
 
     function addToBag(id, name, price) {
-        const existing = cart.find(i => i.id === id);
+          const existing = cart.find(i => i.item_id === id);
         if (existing) existing.qty++;
-        else cart.push({ id, name, price, qty: 1 });
+          else cart.push({ item_id: id, name, price, qty: 1 });
         updateCartUI();
         App.showToast(`${name} added to bag`);
     }
 
     function updateCartUI() {
-        localStorage.setItem('bag', JSON.stringify(cart));
+          localStorage.setItem('canteen_cart', JSON.stringify(cart));
         const count = cart.reduce((acc, i) => acc + i.qty, 0);
         document.getElementById('cart-count').innerText = count;
 
@@ -215,6 +222,11 @@
         document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
         el.classList.add('active');
         renderItems();
+    }
+
+    function filterItems(value) {
+      searchTerm = String(value || '').trim();
+      renderItems();
     }
 
     function goToCheckout() {

@@ -53,6 +53,11 @@
         </div>
         <button class="btn btn-danger btn-block py-2 mt-4 font-weight-bold" type="submit">LOGIN</button>
       </form>
+
+      <div class="d-flex justify-content-between align-items-center mt-3 small">
+        <a href="/password-recovery.html" class="text-warning">Forgot password?</a>
+        <a href="#" onclick="requestVerification(); return false;" class="text-info">Verify email</a>
+      </div>
       
       <div class="text-center mt-4 pt-2 border-top border-secondary">
         <p class="text-white-50 small">Don't have an account? <a href="/signup.html" class="text-warning">Sign up here</a></p>
@@ -61,11 +66,26 @@
   </div>
 
   <script src="/login.js"></script>
+  <script src="/app.js"></script>
   <script>
     async function loginUser() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("pwd").value;
-      await performLogin(email, password);
+      await performLogin(email, password, 'user');
+    }
+
+    async function requestVerification() {
+      const email = prompt('Enter your email to verify');
+      const token = prompt('Enter the verification token shown after signup');
+      if (!email || !token) return;
+
+      const res = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, token })
+      });
+      const data = await res.json();
+      alert(data.message || 'Verification request sent');
     }
   </script>
 </body>

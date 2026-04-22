@@ -15,16 +15,17 @@ async function seed() {
       name: 'Super Admin',
       email: process.env.ADMIN_EMAIL || 'admin@gmail.com',
       password_hash: adminHash,
-      role: 'admin'
+      role: 'admin',
+      email_verified: true
     });
     console.log('Admin created');
 
     // 2. Create Canteens
     const canteens = await Canteen.bulkCreate([
-      { name: 'Central Canteen', location: 'Near Gate 7' },
-      { name: 'Castro Cafe', location: 'Near Library' },
-      { name: 'FET Canteen', location: 'Engineering Block' },
-      { name: 'Hygienic Canteen', location: 'Hostel Area' }
+      { name: 'Central Canteen', location: 'Near Gate 7', description: 'Campus hub for hearty meals and quick student favorites.', is_active: true },
+      { name: 'Castro Cafe', location: 'Near Library', description: 'Coffee, sandwiches, and study-session essentials.', is_active: true },
+      { name: 'FET Canteen', location: 'Engineering Block', description: 'Fast, filling meals for busy engineering students.', is_active: true },
+      { name: 'Hygienic Canteen', location: 'Hostel Area', description: 'Fresh, clean, and balanced meals for daily dining.', is_active: true }
     ]);
     console.log('Canteens created');
 
@@ -73,7 +74,8 @@ async function seed() {
         email: ownerEmail,
         password_hash: ownerHash,
         role: 'owner',
-        canteen_id: canteen.id
+        canteen_id: canteen.id,
+        email_verified: true
       });
       console.log(`Owner created for ${canteen.name}: ${ownerEmail}`);
     }
