@@ -37,14 +37,51 @@ app.set("view engine", "ejs");
 // DATABASE INIT
 // ------------------------------------------------------------
 const { sequelize } = require('./config/db');
+const bcrypt = require('bcrypt');
+const { User } = require('./models');
 
-sequelize.authenticate()
-  .then(() => console.log("DB connected"))
-  .catch(err => console.error("DB connection error:", err));
+async function ensureAdmin() {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@gmail.com';
+    const adminPass = process.env.ADMIN_PASS || 'admin123';
 
-sequelize.sync()
-  .then(() => console.log("Database synced"))
-  .catch(err => console.error("Sync error:", err));
+    const exists = await User.findOne({ where: { email: adminEmail } });
+    if (exists) {
+      console.log('Admin exists:', adminEmail);
+      return;
+    }
+    const hash = await bcrypt.hash(adminPass, 10);
+    await User.create({
+      name: 'Administrator',
+      email: adminEmail,
+      password_hash: hash,
+      role: 'admin'
+    });
+    console.log('Admin account created:', adminEmail);
+  } catch (err) {
+    console.error('ensureAdmin error', err);
+  }
+}
+
+// In serverless, we sync on first request or startup, but carefully.
+// We'll wrap it in a middleware or just call it once.
+let isSynced = false;
+app.use(async (req, res, next) => {
+  if (!isSynced && process.env.NODE_ENV === 'production') {
+    try {
+      await sequelize.sync();
+      await ensureAdmin();
+      isSynced = true;
+    } catch (err) {
+      console.error("Delayed Sync Error:", err);
+    }
+  }
+  next();
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  sequelize.sync().then(() => ensureAdmin());
+}
 
 // ------------------------------------------------------------
 // SOCKET.IO
@@ -70,39 +107,6 @@ app.use("/api", apiRoutes);
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'mainpage.html'));
 });
-// server.js (after sequelize.sync())
-const bcrypt = require('bcrypt');
-const { User } = require('./models');
-
-async function ensureAdmin() {
-  try {
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@gmail.com';
-    const adminPass = process.env.ADMIN_PASS || 'admin123';
-
-    const exists = await User.findOne({ where: { email: adminEmail } });
-    if (exists) {
-      console.log('Admin exists:', adminEmail);
-      return;
-    }
-    const hash = await bcrypt.hash(adminPass, 10);
-    const admin = await User.create({
-      name: 'Administrator',
-      email: adminEmail,
-      password_hash: hash,
-      role: 'admin'
-    });
-    console.log('Admin account created:', adminEmail);
-  } catch (err) {
-    console.error('ensureAdmin error', err);
-  }
-}
-
-sequelize.sync()
-  .then(async () => {
-    console.log('Database synced');
-    await ensureAdmin();
-  })
-  .catch(err => console.error('Sync error:', err));
 
 // ------------------------------------------------------------
 // START SERVER
@@ -116,9 +120,6 @@ if (process.env.NODE_ENV !== 'production') {
     console.log("📦 Static files served from /public");
     console.log("🛠  API available at /api/*");
     console.log("===============================================");
-  
-    // Open front page automatically
-    // openBrowser(`http://localhost:${PORT}/mainpage.html`);
   });
 }
 
