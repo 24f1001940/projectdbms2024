@@ -1,0 +1,144 @@
+/* mainpages.css - High Fidelity Design */
+
+/* 1. Global Reset & Typography */
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif; /* Modern Font */
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%); /* Deep Dark Modern Bg */
+  color: #333;
+  min-height: 100vh;
+}
+
+/* 2. Navbar Styling */
+.custom-navbar {
+  background: rgba(0, 0, 0, 0.85); /* Semi-transparent */
+  backdrop-filter: blur(10px); /* Glass blur effect */
+  padding: 15px 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.navbar-brand {
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+}
+
+.nav-link {
+  font-weight: 500;
+  margin-left: 15px;
+  transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #ffc107 !important; /* Warning color for hover */
+}
+
+.btn-login-nav {
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 5px 20px !important;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #dc3545;
+}
+
+/* 3. Welcome Banner */
+.welcome-banner {
+  background: #ffffff;
+  border-left: 5px solid #dc3545; /* Red accent */
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  transform: translateY(0);
+  transition: transform 0.3s ease;
+}
+
+.welcome-banner:hover {
+  transform: translateY(-5px);
+}
+
+/* 4. Login Card - Glassmorphism */
+.login-card {
+  background: rgba(255, 255, 255, 0.1); /* White with low opacity */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.form-control {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff !important;
+  height: 45px;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.form-control:focus {
+  background: rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none;
+  border-color: #ffc107;
+}
+
+.input-group-text {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 5. Carousel Styling */
+#mainCarousel {
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.image-fit {
+  height: 450px;
+  object-fit: cover;
+  filter: brightness(0.85); /* Slightly darken image for text pop */
+}
+
+.gradient-overlay {
+  background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding-bottom: 30px;
+}
+
+/* 6. Footer */
+footer {
+  background-color: #111 !important;
+  font-size: 0.9rem;
+}
+
+footer a {
+  transition: color 0.2s;
+}
+
+footer a:hover {
+  color: #ffc107 !important;
+  text-decoration: none;
+}
+
+/* Social Icons Hover */
+.social-icons a {
+  display: inline-block;
+  transition: transform 0.2s;
+}
+.social-icons a:hover {
+  transform: scale(1.2);
+  color: #ffc107 !important;
+}
+
+/* Responsive Tweaks */
+@media (max-width: 768px) {
+  .image-fit { height: 250px; }
+  .login-card { margin-top: 0; }
+  .welcome-banner { margin-top: 10px; }
+}

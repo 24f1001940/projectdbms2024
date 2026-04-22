@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Payment | Jamia Canteen</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="mainpages.css">
+
+  <style>
+    body { background: #f8f9fa; }
+    .payment-card { border: none; border-radius: 15px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .item-row { border-bottom: 1px solid #f1f1f1; padding: 10px 0; }
+    .item-row:last-child { border-bottom: none; }
+    .btn-pay { border-radius: 25px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center" href="mainpage.html">
+        <i class="fas fa-utensils mr-2 text-warning"></i> 
+        <span class="font-weight-bold">JAMIA CANTEEN</span>
+      </a>
+      <a href="javascript:history.back()" class="btn btn-outline-light btn-sm"><i class="fas fa-arrow-left mr-1"></i> Back</a>
+    </div>
+  </nav>
+
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="card payment-card p-4">
+          <h4 class="font-weight-bold mb-4 text-center">Finalize Your Order</h4>
+          
+          <div class="mb-4">
+            <h6 class="font-weight-bold text-muted small text-uppercase mb-3">Order Summary</h6>
+            <div id="cartItemsList" class="mb-3">
+              <!-- items here -->
+            </div>
+            <div class="d-flex justify-content-between h5 font-weight-bold border-top pt-3">
+              <span>Grand Total</span>
+              <span class="text-danger" id="cartTotal">₹0.00</span>
+            </div>
+          </div>
+
+          <hr class="my-4">
+
+          <div class="mb-4">
+            <h6 class="font-weight-bold text-muted small text-uppercase mb-3">Payment Details</h6>
+            <div class="form-group">
+              <label class="small font-weight-bold">Select Payment Method</label>
+              <select id="payment-method" class="form-control">
+                <option value="cash">Cash on Delivery</option>
+                <option value="upi">UPI / Scanner</option>
+                <option value="card">Debit/Credit Card</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="small font-weight-bold">Add Note (Optional)</label>
+              <textarea id="payment-note" class="form-control" rows="2" placeholder="e.g. Please keep it spicy!"></textarea>
+            </div>
+          </div>
+
+          <button id="pay-btn" class="btn btn-danger btn-block btn-pay py-3">
+            PLACE ORDER <i class="fas fa-check-circle ml-2"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canteenId = new URLSearchParams(window.location.search).get("canteen") || 1;
+    let cart = JSON.parse(localStorage.getItem("canteen_cart") || "[]");
+
+    function renderCart() {
+      const list = document.getElementById('cartItemsList');
+      if (cart.length === 0) {
+        list.innerHTML = '<p class="text-muted text-center">Your cart is empty.</p>';
+        return;
+      }
+
+      let html = "";
+      let total = 0;
+      cart.forEach(i => {
+        total += i.price * i.qty;
+        html += `
+          <div class="d-flex justify-content-between align-items-center item-row small">
+            <div>
+              <span class="font-weight-bold">${i.name}</span> <br>
+              <span class="text-muted">${i.qty} x ₹${i.price}</span>
+            </div>
+            <span class="font-weight-bold">₹${(i.price * i.qty).toFixed(2)}</span>
+          </div>
+        `;
+      });
+      list.innerHTML = html;
+      document.getElementById('cartTotal').innerText = `₹${total.toFixed(2)}`;
+    }
+
+    async function placeOrder() {
+      if (cart.length === 0) return alert("Cart is empty");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please login to place order");
+        window.location.href = "/loginpage.html";
+        return;
+      }
+
+      const payload = {
+        canteen_id: Number(canteenId),
+        items: cart.map(i => ({ item_id: i.item_id, quantity: i.qty })),
+        payment_method: document.getElementById('payment-method').value,
+        note: document.getElementById('payment-note').value
+      };
+
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token 
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.removeItem("canteen_cart");
+          window.location.href = `/receipt.html?order=${data.orderId}`;
+        } else {
+          alert("Order failed: " + data.message);
+        }
+      } catch (err) {
+        alert("Server error. Please try again.");
+      }
+    }
+
+    document.getElementById('pay-btn').onclick = placeOrder;
+    renderCart();
+  </script>
+</body>
+</html>

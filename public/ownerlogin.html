@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Owner Login</title></head>
+<body>
+  <div style="max-width:420px;margin:40px auto;">
+    <h3>Owner Login</h3>
+    <input id="email" placeholder="owner email" class="form-control"><br>
+    <input id="pwd" placeholder="password" type="password" class="form-control"><br>
+    <button onclick="ownerLogin()" class="btn btn-primary">Login</button>
+    <pre id="out"></pre>
+  </div>
+
+<script src="/login.js"></script>
+
+<script>
+async function ownerLogin() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("pwd").value;
+
+  const login = await performLogin(email, password);
+
+  if (!login || login.user.role !== "owner") {
+    alert("Not an owner account!");
+  }
+}
+</script>
+
+</body>
+</html>

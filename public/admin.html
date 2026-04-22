@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Dashboard | Jamia Canteen</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="mainpages.css">
+
+    <style>
+        body { background: #f8f9fa; color: #333; }
+        .dashboard-header { background: #1e1e2f; color: white; padding: 20px 0; margin-bottom: 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .admin-card { border: none; border-radius: 12px; transition: transform 0.3s; background: white; box-shadow: 0 6px 15px rgba(0,0,0,0.05); }
+        .admin-card:hover { transform: translateY(-5px); }
+        .list-group-item { border: none; border-bottom: 1px solid #eee; padding: 12px 15px; }
+        .section-title { font-weight: 700; color: #dc3545; border-bottom: 2px solid #dc3545; display: inline-block; margin-bottom: 20px; }
+        .btn-custom { border-radius: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center" href="mainpage.html">
+        <i class="fas fa-utensils mr-2 text-warning"></i> 
+        <span class="font-weight-bold">JAMIA CANTEEN ADMIN</span>
+      </a>
+      <button class="btn btn-outline-danger btn-sm" onclick="logout()"><i class="fas fa-sign-out-alt mr-1"></i> Logout</button>
+    </div>
+</nav>
+
+<div class="dashboard-header">
+    <div class="container text-center">
+        <h2 class="mb-0">Control Panel</h2>
+        <p class="text-white-50 small">Manage your canteens, owners, and users effectively</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row">
+
+        <!-- CANTEENS MANAGEMENT -->
+        <div class="col-lg-4 mb-4">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <h5 class="section-title"><i class="fas fa-store mr-2"></i>Canteens</h5>
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <input id="newCanteen" class="form-control" placeholder="New canteen name">
+                            <div class="input-group-append">
+                                <button class="btn btn-danger" onclick="createCanteen()">ADD</button>
+                            </div>
+                        </div>
+                    </div>
+                    <ul id="canteenList" class="list-group list-group-flush">
+                        <li class="text-muted small">Loading canteens...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- OWNER CREATION -->
+        <div class="col-lg-4 mb-4">
+            <div class="card admin-card h-100">
+                <div class="card-body text-center">
+                    <h5 class="section-title"><i class="fas fa-user-plus mr-2"></i>Create Owner</h5>
+                    <p class="small text-muted mb-4">Assign a new owner to an existing canteen</p>
+                    <div class="form-group text-left">
+                        <label class="small font-weight-bold">Select Canteen</label>
+                        <select id="ownerCanteenSelect" class="form-control mb-3"></select>
+                        
+                        <label class="small font-weight-bold">Owner Name</label>
+                        <input id="ownerName" class="form-control mb-3" placeholder="Full name">
+                    </div>
+                    <button class="btn btn-warning btn-block btn-custom py-2" onclick="createOwner()">Create Owner</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- USERS & SYSTEM -->
+        <div class="col-lg-4 mb-4">
+            <div class="card admin-card h-100">
+                <div class="card-body">
+                    <h5 class="section-title"><i class="fas fa-users mr-2"></i>Users & Orders</h5>
+                    <div class="d-flex justify-content-between mb-3">
+                        <button class="btn btn-outline-primary btn-sm btn-custom" onclick="loadUsers()">Refresh Users</button>
+                        <button class="btn btn-outline-primary btn-sm btn-custom" onclick="loadOrders()">Refresh Orders</button>
+                    </div>
+                    <h6 class="font-weight-bold small mb-2">Recent Users</h6>
+                    <ul id="userList" class="list-group list-group-flush small mb-3"></ul>
+                    
+                    <h6 class="font-weight-bold small mb-2">Recent Orders</h6>
+                    <ul id="orderList" class="list-group list-group-flush small"></ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+const token = localStorage.getItem("token");
+
+function logout() {
+  localStorage.clear();
+  window.location.href = "/mainpage.html";
+}
+
+async function loadUsers() {
+  const res = await fetch("/api/admin/users", {
+    headers: { Authorization: "Bearer " + token }
+  });
+  if (!res.ok) return;
+  const data = await res.json();
+
+  let html = "";
+  data.slice(-5).forEach(u => {
+    html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>${u.name} <br><small class='text-muted'>${u.email}</small></span>
+                <span class="badge badge-pill badge-secondary">${u.role}</span>
+            </li>`;
+  });
+  document.getElementById("userList").innerHTML = html || "<li class='text-muted small'>No users found</li>";
+}
+
+async function loadCanteens() {
+  const res = await fetch("/api/canteens");
+  if (!res.ok) return;
+  const data = await res.json();
+
+  let html = "";
+  let dropdown = "<option value=''>Select canteen</option>";
+
+  data.forEach(c => {
+    html += `<li class="list-group-item"><i class="fas fa-utensils mr-2 text-danger"></i>${c.name}</li>`;
+    dropdown += `<option value='${c.id}'>${c.name}</option>`;
+  });
+
+  document.getElementById("canteenList").innerHTML = html || "<li class='text-muted small'>No canteens</li>";
+  document.getElementById("ownerCanteenSelect").innerHTML = dropdown;
+}
+
+async function createCanteen() {
+  const name = document.getElementById("newCanteen").value.trim();
+  if (!name) return alert("Enter canteen name");
+
+  const res = await fetch("/api/admin/canteens", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ name })
+  });
+
+  const data = await res.json();
+  if (!res.ok) return alert("Create canteen failed: " + (data.message || "Error"));
+  alert("Canteen created successfully!");
+  document.getElementById("newCanteen").value = "";
+  loadCanteens();
+}
+
+async function loadOrders() {
+  const res = await fetch("/api/admin/orders", {
+    headers: { Authorization: "Bearer " + token }
+  });
+  if (!res.ok) return;
+  const data = await res.json();
+
+  let html = "";
+  data.slice(-5).forEach(o => {
+    html += `<li class="list-group-item d-flex justify-content-between">
+                <span>Order #${o.id}</span>
+                <span class="font-weight-bold">₹${o.total || 0}</span>
+            </li>`;
+  });
+
+  document.getElementById("orderList").innerHTML = html || "<li class='text-muted small'>No orders found</li>";
+}
+
+async function createOwner() {
+  const ownerNameVal = document.getElementById("ownerName").value.trim();
+  const canteenIdVal = document.getElementById("ownerCanteenSelect").value;
+
+  if (!ownerNameVal || !canteenIdVal) return alert("Please fill all fields");
+
+  const res = await fetch("/api/admin/create-owner", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ canteenId: Number(canteenIdVal), ownerName: ownerNameVal })
+  });
+
+  const data = await res.json();
+  if (!res.ok) return alert("Failed to create owner: " + (data.message || "Error"));
+
+  alert(`Owner account created!\nEmail: ${data.owner.email}\nPassword: ${data.owner.password}`);
+  document.getElementById("ownerName").value = "";
+  loadUsers();
+}
+ 
+loadCanteens();
+loadUsers();
+loadOrders();
+</script>
+
+</body>
+</html>

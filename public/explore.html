@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Explore Canteens | Jamia Canteen</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="mainpages.css">
+
+  <style>
+    body { background: #f8f9fa; color: #333; }
+    .hero-section { background: #1e1e2f; color: white; padding: 60px 0; margin-bottom: 40px; }
+    .canteen-card { 
+      border: none; 
+      border-radius: 15px; 
+      overflow: hidden; 
+      transition: 0.3s; 
+      background: white; 
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+    .canteen-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+    .card-img-top { height: 200px; object-fit: cover; }
+    .btn-explore { border-radius: 25px; font-weight: 600; padding: 8px 25px; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center" href="mainpage.html">
+        <i class="fas fa-utensils mr-2 text-warning"></i> 
+        <span class="font-weight-bold">JAMIA CANTEEN</span>
+      </a>
+      <div class="ml-auto">
+        <a href="user.html" class="btn btn-outline-light btn-sm mr-2">Dashboard</a>
+        <button class="btn btn-danger btn-sm" onclick="localStorage.clear(); location.href='mainpage.html'">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="hero-section text-center">
+    <div class="container">
+      <h1 class="font-weight-bold mb-3">Discover Best Food on Campus</h1>
+      <p class="text-white-50">Choose your favorite canteen and order fresh meals instantly.</p>
+    </div>
+  </div>
+
+  <div class="container mb-5">
+    <div id="canteenList" class="row">
+      <div class="col-12 text-center py-5">
+        <div class="spinner-border text-danger" role="status"></div>
+        <p class="mt-3 text-muted">Finding canteens...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <script>
+    const images = [
+      "https://i0.wp.com/www.opindia.com/wp-content/uploads/2022/07/Jamia-canteen-e1658239372392.jpg",
+      "https://live.staticflickr.com/8114/8674068395_8699057f55_b.jpg",
+      "https://thevioletjourno.files.wordpress.com/2018/10/images-138355478744454222922.jpg",
+      "https://10619-2.s.cdn12.com/rests/original/109_506967486.jpg"
+    ];
+
+    async function loadCanteens() {
+      try {
+        const res = await fetch("/api/canteens");
+        const data = await res.json();
+
+        let html = "";
+        data.forEach((c, index) => {
+          const img = images[index % images.length];
+          html += `
+            <div class="col-md-4 col-sm-6 mb-4">
+              <div class="card canteen-card h-100">
+                <img src="${img}" class="card-img-top" alt="${c.name}">
+                <div class="card-body d-flex flex-column">
+                  <h5 class="font-weight-bold mb-2">${c.name}</h5>
+                  <p class="text-muted small flex-grow-1">${c.description || "Fresh and healthy meals served daily with love and hygiene."}</p>
+                  <div class="mt-3">
+                    <button onclick="openMenu(${c.id})" class="btn btn-danger btn-explore btn-block">
+                      VIEW MENU <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        document.getElementById("canteenList").innerHTML = html || "<div class='col-12 text-center'><p>No canteens available.</p></div>";
+      } catch (err) {
+        document.getElementById("canteenList").innerHTML = "<div class='col-12 text-center text-danger'><p>Failed to load canteens. Please check your connection.</p></div>";
+      }
+    }
+
+    function openMenu(id) {
+      window.location.href = "/canteencart.html?canteen=" + id;
+    }
+
+    loadCanteens();
+  </script>
+</body>
+</html>

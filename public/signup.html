@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign Up | Jamia Canteen</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="mainpages.css">
+  <style>
+    .signup-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .signup-card {
+      width: 100%;
+      max-width: 450px;
+    }
+    label { color: rgba(255,255,255,0.8); font-size: 0.9rem; }
+  </style>
+</head>
+<body class="bg-dark">
+
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center" href="mainpage.html">
+        <i class="fas fa-utensils mr-2 text-warning"></i> 
+        <span class="font-weight-bold">JAMIA CANTEEN</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="signup-wrapper">
+    <div class="login-card signup-card shadow-lg mt-5">
+      <div class="text-center mb-4">
+        <h3 class="text-white font-weight-bold">Join Us</h3>
+        <p class="text-white-50 small">Create your account to start ordering</p>
+      </div>
+      
+      <form id="signup-form" onsubmit="event.preventDefault(); signup();">
+        <div class="form-group">
+          <label for="name"><i class="fas fa-user mr-2"></i>Full Name</label>
+          <input id="name" class="form-control" placeholder="Enter your name" required />
+        </div>
+        <div class="form-group">
+          <label for="email"><i class="fas fa-envelope mr-2"></i>Email Address</label>
+          <input id="email" type="email" class="form-control" placeholder="name@example.com" required />
+        </div>
+        <div class="form-group">
+          <label for="password"><i class="fas fa-lock mr-2"></i>Password</label>
+          <input id="password" type="password" class="form-control" placeholder="••••••••" minlength="6" required />
+        </div>
+        <button class="btn btn-danger btn-block py-2 mt-4 font-weight-bold" type="submit">CREATE ACCOUNT</button>
+      </form>
+      
+      <div class="text-center mt-4 pt-2 border-top border-secondary">
+        <p class="text-white-50 small">Already have an account? <a href="/loginpage.html" class="text-warning">Login here</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <script>
+    async function signup() {
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          alert('Account created successfully! Please login.');
+          window.location.href = '/loginpage.html';
+        } else {
+          alert('Signup failed: ' + (data.message || 'Something went wrong'));
+        }
+      } catch (e) {
+        console.error('signup error', e);
+        alert('Network or server error');
+      }
+    }
+  </script>
+</body>
+</html>

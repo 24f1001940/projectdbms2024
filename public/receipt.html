@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Receipt | Jamia Canteen</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+  
+  <style>
+    body { background: #f1f1f1; font-family: 'Poppins', sans-serif; }
+    .receipt-container { max-width: 600px; margin: 50px auto; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; }
+    .receipt-header { background: #dc3545; color: white; padding: 30px; text-align: center; }
+    .receipt-body { padding: 30px; }
+    .item-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee; }
+    .item-row:last-of-type { border-bottom: none; }
+    .total-section { border-top: 2px solid #333; margin-top: 20px; padding-top: 15px; }
+    @media print {
+      body { background: white; }
+      .receipt-container { box-shadow: none; margin: 0; width: 100%; max-width: 100%; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="receipt-container">
+    <div class="receipt-header">
+      <i class="fas fa-check-circle fa-3x mb-3 text-warning"></i>
+      <h2 class="font-weight-bold mb-0">Order Confirmed!</h2>
+      <p class="mb-0 small opacity-75">Thank you for ordering with Jamia Canteen</p>
+    </div>
+    
+    <div class="receipt-body">
+      <div class="d-flex justify-content-between mb-4 small text-muted">
+        <span id="orderId">Order #...</span>
+        <span id="orderDate">Date: ...</span>
+      </div>
+
+      <div id="itemsList">
+        <!-- items here -->
+      </div>
+
+      <div class="total-section">
+        <div class="d-flex justify-content-between h4 font-weight-bold">
+          <span>Grand Total</span>
+          <span class="text-danger" id="grandTotal">₹0.00</span>
+        </div>
+        <p class="small text-muted mt-2" id="paymentMethod">Payment: ...</p>
+      </div>
+
+      <div class="mt-5 text-center no-print">
+        <button class="btn btn-dark btn-block mb-2 py-2 font-weight-bold" onclick="window.print()">
+          <i class="fas fa-print mr-2"></i> PRINT RECEIPT
+        </button>
+        <a href="user.html" class="btn btn-outline-secondary btn-block py-2">Go to Dashboard</a>
+      </div>
+    </div>
+    
+    <div class="bg-light p-3 text-center small text-muted border-top">
+      Jamia Millia Islamia, New Delhi <br>
+      © 2024 Jamia Canteen Management
+    </div>
+  </div>
+
+  <script>
+    async function loadReceipt() {
+      const orderId = new URLSearchParams(window.location.search).get('order');
+      const token = localStorage.getItem('token');
+      
+      if (!orderId || !token) {
+        document.body.innerHTML = "<div class='text-center mt-5'><h3>Access Denied</h3><a href='/loginpage.html'>Login here</a></div>";
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/orders/${orderId}`, {
+          headers: { Authorization: "Bearer " + token }
+        });
+        const o = await res.json();
+        
+        if (!res.ok) throw new Error();
+
+        document.getElementById('orderId').innerText = `Order #${o.id}`;
+        document.getElementById('orderDate').innerText = new Date(o.createdAt).toLocaleString();
+        document.getElementById('grandTotal').innerText = `₹${o.total.toFixed(2)}`;
+        document.getElementById('paymentMethod').innerText = `Payment Method: ${o.payment_method.toUpperCase()}`;
+
+        let itemsHtml = "";
+        const items = o.order_items || [];
+        items.forEach(it => {
+          const name = it.item ? it.item.name : `Item #${it.item_id}`;
+          itemsHtml += `
+            <div class="item-row">
+              <div>
+                <span class="font-weight-bold d-block">${name}</span>
+                <span class="small text-muted">${it.quantity} x ₹${it.unit_price}</span>
+              </div>
+              <span class="font-weight-bold mt-2">₹${(it.quantity * it.unit_price).toFixed(2)}</span>
+            </div>
+          `;
+        });
+        document.getElementById('itemsList').innerHTML = itemsHtml || "<p class='text-muted'>No items found.</p>";
+
+      } catch (err) {
+        alert("Failed to load receipt");
+      }
+    }
+
+    loadReceipt();
+  </script>
+</body>
+</html>
