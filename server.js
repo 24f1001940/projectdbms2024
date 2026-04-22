@@ -68,7 +68,7 @@ app.use("/api", apiRoutes);
 // BASIC TEST ROUTE
 // ------------------------------------------------------------
 app.get("/", (req, res) => {
-  res.send("Canteen Management API is running");
+  res.sendFile(path.join(__dirname, 'public', 'mainpage.html'));
 });
 // server.js (after sequelize.sync())
 const bcrypt = require('bcrypt');
