@@ -1,89 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Vision & Mission — Jamia Canteen</title>
-
+  <title>Vision & Mission | Jamia Canteen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="mainpages.css">
   <style>
-    body {
-      background-image: url("https://thumbs.dreamstime.com/b/different-spices-herbs-stone-table-top-view-ingredients-cooking-food-background-different-spices-herbs-black-120232209.jpg");
-      background-size: cover;
-      background-repeat: no-repeat;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 900px;
+    .content-card {
+      max-width: 800px;
       margin: 50px auto;
-      padding: 30px;
-      background-color: rgba(255, 255, 255, 0.92);
-      border-radius: 10px;
-      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      color: white;
     }
-
-    h1 {
-      color: orangered;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    h2 {
-      color: #0056b3;
-      margin-top: 20px;
-      text-align: center;
-    }
-
-    p {
-      color: #444;
-      line-height: 1.6;
-      margin-top: 10px;
-    }
-
-    .jam {
-      color: darkmagenta;
-      font-weight: bold;
-    }
-
-    a {
-      text-decoration: none;
-      color: orangered;
-      font-size: 20px;
-      display: block;
-      margin-top: 15px;
-      text-align: center;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
+    .accent-text { color: #ffc107; font-weight: 700; }
+    p { line-height: 1.8; opacity: 0.9; }
   </style>
 </head>
+<body class="bg-dark">
 
-<body>
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center" href="mainpage.html">
+        <i class="fas fa-utensils mr-2 text-warning"></i> 
+        <span class="font-weight-bold">JAMIA CANTEEN</span>
+      </a>
+    </div>
+  </nav>
 
   <div class="container">
-    <h1>Welcome to Our Canteen Management System</h1>
+    <div class="content-card shadow-lg text-center">
+      <i class="fas fa-eye fa-3x mb-4 text-warning"></i>
+      <h1 class="font-weight-bold mb-4">Our <span class="accent-text">Vision</span></h1>
+      <p class="lead mb-5">
+        At <span class="accent-text">JAMIA CANTEEN</span>, we aim to transform the campus dining experience through 
+        digital innovation, healthy food choices, and community-driven services. We envision a future 
+        where every student enjoys fresh, hygienic meals with zero wait time.
+      </p>
 
-    <h2>Our Vision</h2>
-    <p>
-      At <span class="jam">JAMIA CANTEEN</span>, we aim to transform the dining experience through innovation,
-      healthy choices, efficiency, and community-driven services.
-    </p>
+      <hr class="bg-secondary my-5">
 
-    <h2>Our Mission</h2>
-    <p>
-      Our mission is to offer high-quality food, fast service, and a welcoming environment.  
-      We are committed to hygiene, nutrition, and continuous improvement to serve our students better.
-    </p>
+      <i class="fas fa-bullseye fa-3x mb-4 text-danger"></i>
+      <h1 class="font-weight-bold mb-4">Our <span class="text-danger">Mission</span></h1>
+      <p class="lead">
+        Our mission is to provide high-quality, nutritious food in a fast and efficient manner. 
+        We are committed to maintaining the highest standards of hygiene and leveraging modern technology 
+         to ensure a seamless ordering experience for the entire university community.
+      </p>
 
-    <p><strong>Join us in creating a better dining experience!</strong></p>
-
-    <a href="mainpage.html">← Back to Home</a>
+      <a href="mainpage.html" class="btn btn-outline-warning mt-5 px-5 rounded-pill">
+        <i class="fas fa-arrow-left mr-2"></i> BACK TO HOME
+      </a>
+    </div>
   </div>
 
 </body>
 </html>
+

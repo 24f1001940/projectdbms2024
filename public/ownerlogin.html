@@ -1,29 +1,54 @@
 <!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Owner Login</title></head>
-<body>
-  <div style="max-width:420px;margin:40px auto;">
-    <h3>Owner Login</h3>
-    <input id="email" placeholder="owner email" class="form-control"><br>
-    <input id="pwd" placeholder="password" type="password" class="form-control"><br>
-    <button onclick="ownerLogin()" class="btn btn-primary">Login</button>
-    <pre id="out"></pre>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Owner Login | Jamia Canteen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="mainpages.css">
+  <style>
+    .login-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-card { width: 100%; max-width: 400px; }
+  </style>
+</head>
+<body class="bg-dark">
+  <div class="login-wrapper">
+    <div class="login-card shadow-lg">
+      <div class="text-center mb-4">
+        <i class="fas fa-store fa-3x text-warning mb-3"></i>
+        <h3 class="text-white font-weight-bold">Owner Portal</h3>
+        <p class="text-white-50 small">Manage your canteen & orders</p>
+      </div>
+      <form onsubmit="event.preventDefault(); ownerLogin();">
+        <div class="form-group">
+          <label class="text-white-50 small">Owner Email</label>
+          <input id="email" type="email" class="form-control" placeholder="owner@example.com" required>
+        </div>
+        <div class="form-group">
+          <label class="text-white-50 small">Password</label>
+          <input id="pwd" type="password" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button class="btn btn-danger btn-block py-2 mt-4 font-weight-bold">LOG IN AS OWNER</button>
+      </form>
+      <div class="text-center mt-4 pt-2">
+        <a href="mainpage.html" class="text-warning small"><i class="fas fa-arrow-left mr-1"></i> Back to Home</a>
+      </div>
+    </div>
   </div>
-
 <script src="/login.js"></script>
-
 <script>
 async function ownerLogin() {
-  const email = document.getElementById("email").value;
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("pwd").value;
-
   const login = await performLogin(email, password);
-
-  if (!login || login.user.role !== "owner") {
-    alert("Not an owner account!");
+  if (login && login.user.role !== "owner") {
+    alert("This is not an owner account!");
+    localStorage.clear();
+    location.reload();
   }
 }
 </script>
-
 </body>
 </html>

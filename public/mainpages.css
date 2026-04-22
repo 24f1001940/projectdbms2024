@@ -3,11 +3,15 @@
 /* 1. Global Reset & Typography */
 body {
   margin: 0;
-  font-family: 'Poppins', sans-serif; /* Modern Font */
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%); /* Deep Dark Modern Bg */
+  padding-top: 70px; /* Space for fixed navbar */
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 100%);
   color: #333;
   min-height: 100vh;
 }
+
+.text-glass { color: rgba(255,255,255,0.8); }
+.bg-glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
 
 /* 2. Navbar Styling */
 .custom-navbar {
