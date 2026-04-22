@@ -18,6 +18,29 @@ const isStrongPassword = (password) => {
   return /[a-z]/i.test(password) && /\d/.test(password);
 };
 
+const unknownColumnName = (error) => {
+  const message = String(error && error.message ? error.message : '');
+  const match = message.match(/Unknown column '([^']+)'/i);
+  return match ? match[1] : null;
+};
+
+const safeUserUpdate = async (user, payload) => {
+  const remaining = { ...payload };
+
+  while (Object.keys(remaining).length > 0) {
+    try {
+      await user.update(remaining);
+      return;
+    } catch (error) {
+      const badColumn = unknownColumnName(error);
+      if (!badColumn || !(badColumn in remaining)) {
+        throw error;
+      }
+      delete remaining[badColumn];
+    }
+  }
+};
+
 const generateAccessToken = (user) => jwt.sign(
   {
     id: user.id,
@@ -54,7 +77,7 @@ const issueSession = async (user) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  await user.update({
+  await safeUserUpdate(user, {
     refresh_token_hash: hashToken(refreshToken),
     refresh_token_expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     last_login_at: new Date()
@@ -131,7 +154,7 @@ exports.verifyEmail = async (req, res) => {
       return res.status(400).json({ message: 'Invalid verification token' });
     }
 
-    await user.update({
+    await safeUserUpdate(user, {
       email_verified: true,
       email_verification_token: null,
       email_verification_expires: null
@@ -211,7 +234,7 @@ exports.refreshToken = async (req, res) => {
     const nextRefreshToken = generateRefreshToken(user);
     const nextAccessToken = generateAccessToken(user);
 
-    await user.update({
+    await safeUserUpdate(user, {
       refresh_token_hash: hashToken(nextRefreshToken),
       refresh_token_expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     });
@@ -226,7 +249,7 @@ exports.logout = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
     if (user) {
-      await user.update({ refresh_token_hash: null, refresh_token_expires: null });
+      await safeUserUpdate(user, { refresh_token_hash: null, refresh_token_expires: null });
     }
     return res.json({ message: 'Logged out successfully' });
   } catch (err) {
@@ -238,7 +261,7 @@ exports.logoutAll = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
     if (user) {
-      await user.update({
+      await safeUserUpdate(user, {
         refresh_token_hash: null,
         refresh_token_expires: null,
         token_version: (user.token_version || 0) + 1
@@ -263,7 +286,7 @@ exports.forgotPassword = async (req, res) => {
     }
 
     const resetToken = crypto.randomBytes(24).toString('hex');
-    await user.update({
+    await safeUserUpdate(user, {
       reset_token_hash: hashToken(resetToken),
       reset_expires: new Date(Date.now() + 60 * 60 * 1000)
     });
@@ -302,7 +325,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Invalid or expired reset token' });
     }
 
-    await user.update({
+    await safeUserUpdate(user, {
       password_hash: await bcrypt.hash(password, 12),
       reset_token_hash: null,
       reset_expires: null,
@@ -360,7 +383,7 @@ exports.updateProfile = async (req, res) => {
     const verificationRequired = process.env.EMAIL_VERIFICATION_REQUIRED === 'true';
     const nextAvatar = req.file ? `/uploads/${req.file.filename}` : (avatar || user.avatar);
 
-    await user.update({
+    await safeUserUpdate(user, {
       name: name ? String(name).trim() : user.name,
       email: nextEmail,
       avatar: nextAvatar,
@@ -393,7 +416,7 @@ exports.changePassword = async (req, res) => {
       return res.status(400).json({ message: 'Current password is incorrect' });
     }
 
-    await user.update({
+    await safeUserUpdate(user, {
       password_hash: await bcrypt.hash(nextPassword, 12),
       token_version: (user.token_version || 0) + 1,
       refresh_token_hash: null,
